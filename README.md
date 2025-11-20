@@ -2,6 +2,8 @@
 
 A comprehensive care management application for tracking health information, medications, appointments, and other important details for loved ones in assisted living.
 
+![Wellnest Dashboard](screenshots/dashboard.png)
+
 ## Features (Phase 1 - MVP)
 
 ### Core Functionality
