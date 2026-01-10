@@ -2,8 +2,6 @@
 
 A comprehensive care management application for tracking health information, medications, appointments, and other important details for loved ones in assisted living.
 
-![Wellnest Dashboard](screenshots/dashboard.png)
-
 ## Features
 
 ### Core Functionality
@@ -99,6 +97,73 @@ The database uses explicit migrations to preserve user data across schema change
 - v2→v3: Added insurance card photo fields
 - v3→v4: Added room dimension fields to profiles
 - v4→v5: Created supplies table
+
+## Screenshots
+
+### Profile Selection
+Choose which loved one's information to view and manage.
+
+![Profile Selection](screenshots/select-profile.png)
+
+### Main Dashboard
+Quick access to all features from a clean, organized home screen.
+
+![Dashboard](screenshots/dashboard.png)
+
+### Medications
+Track all medications with dosage, frequency, prescribing doctor, and pharmacy information.
+
+![Medications List](screenshots/medications.png)
+
+### Appointments
+Keep track of upcoming appointments with date, time, location, and notes.
+
+![Appointments](screenshots/appointments.png)
+
+![Edit Appointment](screenshots/edit-appointment.png)
+
+### Staff & Caregiver Contacts
+Store contact information for facility staff, doctors, and caregivers.
+
+![Contacts List](screenshots/contacts.png)
+
+![Edit Contact](screenshots/edit-contact.png)
+
+### Health Profile
+Record vital health information including allergies, medical conditions, and emergency contacts.
+
+![Health Profile](screenshots/health-profile.png)
+
+### Insurance Information
+Manage insurance policies with provider details, policy numbers, and card photos.
+
+![Insurance Policies](screenshots/insurance.png)
+
+![Edit Insurance Policy](screenshots/edit-insurance.png)
+
+### Room Information
+Track room dimensions for furniture shopping, including window measurements for drapes.
+
+![Edit Room Information](screenshots/edit-room-information.png)
+
+### Supply Tracking
+Keep track of consumables that need regular replenishing like milk, snacks, and personal items.
+
+![Supplies List](screenshots/supplies.png)
+
+![Edit Supply](screenshots/edit-supply.png)
+
+### Security Codes
+Securely store access codes for facility doors, rooms, and cabinets.
+
+![Security Codes](screenshots/security-codes.png)
+
+![Edit Security Code](screenshots/edit-security-code.png)
+
+### Profile Management
+Edit profile information including name, photo, notes, and room details.
+
+![Edit Profile](screenshots/edit-profile.png)
 
 ## Future Enhancements
 
