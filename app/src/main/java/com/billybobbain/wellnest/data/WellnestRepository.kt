@@ -94,6 +94,16 @@ class WellnestRepository(private val dao: WellnestDao) {
     suspend fun deleteSecurityCode(securityCode: SecurityCode) =
         dao.deleteSecurityCode(securityCode)
 
+    // Supply operations
+    fun getSuppliesForProfile(profileId: Long): Flow<List<Supply>> =
+        dao.getSuppliesForProfile(profileId)
+
+    suspend fun insertSupply(supply: Supply) = dao.insertSupply(supply)
+
+    suspend fun updateSupply(supply: Supply) = dao.updateSupply(supply)
+
+    suspend fun deleteSupply(supply: Supply) = dao.deleteSupply(supply)
+
     // Settings operations
     val settings: Flow<Settings?> = dao.getSettings()
 

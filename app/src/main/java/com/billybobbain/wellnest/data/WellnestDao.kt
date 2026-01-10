@@ -115,6 +115,19 @@ interface WellnestDao {
     @Delete
     suspend fun deleteSecurityCode(securityCode: SecurityCode)
 
+    // Supply operations
+    @Query("SELECT * FROM supplies WHERE profileId = :profileId ORDER BY itemName ASC")
+    fun getSuppliesForProfile(profileId: Long): Flow<List<Supply>>
+
+    @Insert
+    suspend fun insertSupply(supply: Supply)
+
+    @Update
+    suspend fun updateSupply(supply: Supply)
+
+    @Delete
+    suspend fun deleteSupply(supply: Supply)
+
     // Settings operations
     @Query("SELECT * FROM settings WHERE id = 1")
     fun getSettings(): Flow<Settings?>

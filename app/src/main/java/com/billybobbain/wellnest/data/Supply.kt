@@ -6,7 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "medications",
+    tableName = "supplies",
     foreignKeys = [
         ForeignKey(
             entity = Profile::class,
@@ -17,18 +17,11 @@ import androidx.room.PrimaryKey
     ],
     indices = [Index("profileId")]
 )
-data class Medication(
+data class Supply(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val profileId: Long,
-    val drugName: String,
-    val dosage: String? = null,
-    val frequency: String? = null,
-    val prescribingDoctor: String? = null,
-    val pharmacy: String? = null,
-    val startDate: Long? = null,
-    val refillDate: Long? = null,
-    val notes: String? = null,
-    val classification: String? = null,
-    val diagnosis: String? = null
+    val itemName: String,
+    val lastReplenished: Long? = null,
+    val notes: String? = null
 )

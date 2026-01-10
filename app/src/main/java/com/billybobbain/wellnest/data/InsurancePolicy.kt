@@ -33,5 +33,7 @@ data class InsurancePolicy(
     val providerPhone: String? = null,
     val coverageType: String? = null, // PPO, HMO, etc.
     val insuranceType: String? = null, // Medical, Dental, Vision, Medicare, etc.
-    val notes: String? = null
+    val notes: String? = null,
+    val frontCardPhotoUri: String? = null,
+    val backCardPhotoUri: String? = null
 )

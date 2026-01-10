@@ -2,12 +2,14 @@ package com.billybobbain.wellnest.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.billybobbain.wellnest.WellnestViewModel
 import com.billybobbain.wellnest.data.Contact
@@ -53,7 +55,8 @@ fun AddEditContactScreen(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text("Name *") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
             )
 
             OutlinedTextField(
@@ -61,7 +64,8 @@ fun AddEditContactScreen(
                 onValueChange = { role = it },
                 label = { Text("Role/Title") },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("e.g., Nurse, Care Manager") }
+                placeholder = { Text("e.g., Nurse, Care Manager") },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
             )
 
             OutlinedTextField(
@@ -83,7 +87,8 @@ fun AddEditContactScreen(
                 onValueChange = { notes = it },
                 label = { Text("Notes") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 3
+                minLines = 3,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
 
             Spacer(modifier = Modifier.weight(1f))

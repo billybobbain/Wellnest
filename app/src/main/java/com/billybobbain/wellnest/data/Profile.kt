@@ -10,5 +10,13 @@ data class Profile(
     val name: String,
     val photoUri: String? = null,
     val notes: String? = null,
-    val createdDate: Long = System.currentTimeMillis()
+    val createdDate: Long = System.currentTimeMillis(),
+
+    // Room dimensions
+    val roomLength: String? = null,
+    val roomWidth: String? = null,
+    val roomHeight: String? = null,
+    val windowWidth: String? = null,
+    val windowHeight: String? = null,
+    val roomNotes: String? = null
 )

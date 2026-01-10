@@ -21,14 +21,28 @@ fun HealthProfileScreen(
     val healthProfile by viewModel.healthProfile.collectAsState()
     val selectedProfileId by viewModel.selectedProfileId.collectAsState()
 
-    var height by remember { mutableStateOf(healthProfile?.height ?: "") }
-    var weight by remember { mutableStateOf(healthProfile?.weight ?: "") }
-    var bloodType by remember { mutableStateOf(healthProfile?.bloodType ?: "") }
-    var allergies by remember { mutableStateOf(healthProfile?.allergies ?: "") }
-    var medicalConditions by remember { mutableStateOf(healthProfile?.medicalConditions ?: "") }
-    var emergencyContact by remember { mutableStateOf(healthProfile?.emergencyContact ?: "") }
-    var emergencyPhone by remember { mutableStateOf(healthProfile?.emergencyPhone ?: "") }
-    var notes by remember { mutableStateOf(healthProfile?.notes ?: "") }
+    var height by remember { mutableStateOf("") }
+    var weight by remember { mutableStateOf("") }
+    var bloodType by remember { mutableStateOf("") }
+    var allergies by remember { mutableStateOf("") }
+    var medicalConditions by remember { mutableStateOf("") }
+    var emergencyContact by remember { mutableStateOf("") }
+    var emergencyPhone by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+
+    // Update state when healthProfile loads
+    LaunchedEffect(healthProfile) {
+        healthProfile?.let { profile ->
+            height = profile.height ?: ""
+            weight = profile.weight ?: ""
+            bloodType = profile.bloodType ?: ""
+            allergies = profile.allergies ?: ""
+            medicalConditions = profile.medicalConditions ?: ""
+            emergencyContact = profile.emergencyContact ?: ""
+            emergencyPhone = profile.emergencyPhone ?: ""
+            notes = profile.notes ?: ""
+        }
+    }
 
     Scaffold(
         topBar = {

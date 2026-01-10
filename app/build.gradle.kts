@@ -75,6 +75,12 @@ dependencies {
     // WorkManager for notifications
     implementation("androidx.work:work-runtime-ktx:2.10.0")
 
+    // Coil for image loading
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // ExifInterface for image rotation handling
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
