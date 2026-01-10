@@ -2,6 +2,10 @@
 
 A comprehensive care management application for tracking health information, medications, appointments, and other important details for loved ones in assisted living.
 
+## Demo Video
+
+https://github.com/billybobbain/Wellnest/assets/screenshots/demo.mp4
+
 ## Features
 
 ### Core Functionality
