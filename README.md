@@ -4,7 +4,7 @@ A comprehensive care management application for tracking health information, med
 
 ## Demo Video
 
-https://github.com/billybobbain/Wellnest/assets/screenshots/demo.mp4
+[Watch Demo Video](screenshots/demo.mp4)
 
 ## Features
 
