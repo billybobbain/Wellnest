@@ -4,7 +4,7 @@ A comprehensive care management application for tracking health information, med
 
 ![Wellnest Dashboard](screenshots/dashboard.png)
 
-## Features (Phase 1 - MVP)
+## Features
 
 ### Core Functionality
 - **Multiple Profiles**: Manage care information for multiple people
@@ -19,7 +19,18 @@ A comprehensive care management application for tracking health information, med
   - Separate provider database for easy reuse
   - Policy numbers, member and provider phone numbers
   - Coverage type (PPO, HMO, etc.) and insurance type (Medical, Dental, Medicare, etc.)
+  - Photo storage for insurance card front/back
 - **Security Codes**: Store access codes for facility doors, rooms, etc.
+- **Room Information**: Track room dimensions and details:
+  - Room length, width, and ceiling height
+  - Window dimensions for drapes/curtains
+  - Room notes for additional details
+  - Perfect for furniture shopping and planning
+- **Supply Tracking**: Simple consumables tracker:
+  - Track items that need regular replenishing (milk, snacks, etc.)
+  - Last replenished date tracking
+  - Quick "Mark as Replenished" button
+  - No alerts - just a reference list
 
 ### UI Features
 - **6 Color Themes**: Teal, Purple, Blue, Green, Orange, Pink (with light/dark mode support)
@@ -32,15 +43,16 @@ A comprehensive care management application for tracking health information, med
 - **Language**: Kotlin
 - **UI Framework**: Jetpack Compose
 - **Architecture Pattern**: MVVM (Model-View-ViewModel)
-- **Database**: Room (SQLite) with the following entities:
-  - Profile
+- **Database**: Room (SQLite) version 5 with the following entities:
+  - Profile (with room dimension fields)
   - Medication
   - Appointment
   - Contact
   - HealthProfile
   - InsuranceProvider
-  - InsurancePolicy
+  - InsurancePolicy (with photo URI fields)
   - SecurityCode
+  - Supply
   - Settings
 - **State Management**: StateFlow for reactive UI updates
 - **Navigation**: Jetpack Compose Navigation
@@ -79,19 +91,26 @@ All entities use foreign keys with cascade delete to maintain referential integr
 - Profile (1) → (one) HealthProfile
 - Profile (1) → (many) InsurancePolicies
 - Profile (1) → (many) SecurityCodes
+- Profile (1) → (many) Supplies
 - InsuranceProvider (1) → (many) InsurancePolicies
 
-## Future Enhancements (Phase 2 & 3)
+### Database Migrations
+The database uses explicit migrations to preserve user data across schema changes:
+- v2→v3: Added insurance card photo fields
+- v3→v4: Added room dimension fields to profiles
+- v4→v5: Created supplies table
 
-Planned features for future releases:
-- Document/photo storage for insurance cards, medication bottles, etc.
-- Notes/Journal for daily observations
-- Task/Checklist system for care-related tasks
-- Search functionality across all data
-- History/Timeline views for tracking changes
-- Export/Share functionality (PDF, text)
-- Dashboard with quick access to upcoming appointments and current medications
-- Enhanced appointment reminders with WorkManager notifications
+## Future Enhancements
+
+See `FEATURE_IDEAS.md` for detailed planning and priorities.
+
+### Under Consideration
+- **Meal/Menu Tracking** - Import facility menus, track meals eaten together
+- **Calendar Coordination** - Shared calendaring for family members coordinating visits
+- **Social/Community Features** - Optional message boards for caregivers at same facility
+- **Search functionality** - Search across all data
+- **Export/Share functionality** - PDF, text export
+- **Enhanced appointment reminders** - WorkManager notifications
 
 ## Package Structure
 
@@ -106,6 +125,7 @@ com.billybobbain.wellnest/
 │   ├── InsuranceProvider.kt
 │   ├── InsurancePolicy.kt
 │   ├── SecurityCode.kt
+│   ├── Supply.kt
 │   ├── Settings.kt
 │   ├── WellnestDao.kt
 │   ├── WellnestDatabase.kt
@@ -113,6 +133,9 @@ com.billybobbain.wellnest/
 ├── ui/
 │   ├── screens/              # All screen composables
 │   └── theme/                # Theme, Color, Type definitions
+├── utils/                    # Utility classes
+│   ├── ImageUtils.kt
+│   └── MedicationImporter.kt
 ├── MainActivity.kt
 ├── WellnestApp.kt           # Navigation setup
 ├── WellnestViewModel.kt     # Main ViewModel
@@ -122,9 +145,10 @@ com.billybobbain.wellnest/
 
 ## Notes
 
-- Database uses `.fallbackToDestructiveMigration()` - schema changes will clear all data
+- Database uses explicit migrations to preserve user data across schema changes
 - All phone numbers, addresses, and personal information are stored locally on device
-- No cloud sync or backup in Phase 1 (all data is local only)
+- No cloud sync or backup - all data is local only
+- Profile photos and insurance card images stored in app-private storage
 
 ## Icon
 
