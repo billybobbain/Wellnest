@@ -2,12 +2,14 @@ package com.billybobbain.wellnest.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.billybobbain.wellnest.WellnestViewModel
 import com.billybobbain.wellnest.data.Medication
@@ -29,6 +31,30 @@ fun AddEditMedicationScreen(
     var prescribingDoctor by remember { mutableStateOf(existingMedication?.prescribingDoctor ?: "") }
     var pharmacy by remember { mutableStateOf(existingMedication?.pharmacy ?: "") }
     var notes by remember { mutableStateOf(existingMedication?.notes ?: "") }
+    var classification by remember { mutableStateOf(existingMedication?.classification ?: "") }
+    var diagnosis by remember { mutableStateOf(existingMedication?.diagnosis ?: "") }
+
+    var classificationExpanded by remember { mutableStateOf(false) }
+    var diagnosisExpanded by remember { mutableStateOf(false) }
+
+    val classificationOptions = listOf(
+        "Antianxiety",
+        "Antidepressant",
+        "Antihypertensive",
+        "Calcium Channel Blocker",
+        "Antacids",
+        "Antiviral",
+        "Ophthalmic Agent"
+    )
+
+    val diagnosisOptions = listOf(
+        "Hypertension",
+        "Depression",
+        "Dry Eyes",
+        "GERD",
+        "HIV",
+        "Anxiety"
+    )
 
     Scaffold(
         topBar = {
@@ -54,7 +80,8 @@ fun AddEditMedicationScreen(
                 value = drugName,
                 onValueChange = { drugName = it },
                 label = { Text("Drug Name *") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
             )
 
             OutlinedTextField(
@@ -70,29 +97,95 @@ fun AddEditMedicationScreen(
                 onValueChange = { frequency = it },
                 label = { Text("Frequency") },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("e.g., Twice daily") }
+                placeholder = { Text("e.g., Twice daily") },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
 
             OutlinedTextField(
                 value = prescribingDoctor,
                 onValueChange = { prescribingDoctor = it },
                 label = { Text("Prescribing Doctor") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
             )
 
             OutlinedTextField(
                 value = pharmacy,
                 onValueChange = { pharmacy = it },
                 label = { Text("Pharmacy") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
             )
+
+            ExposedDropdownMenuBox(
+                expanded = classificationExpanded,
+                onExpandedChange = { classificationExpanded = it }
+            ) {
+                OutlinedTextField(
+                    value = classification,
+                    onValueChange = { classification = it },
+                    label = { Text("Classification") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = classificationExpanded) },
+                    placeholder = { Text("e.g., Antianxiety") },
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
+                )
+                ExposedDropdownMenu(
+                    expanded = classificationExpanded,
+                    onDismissRequest = { classificationExpanded = false }
+                ) {
+                    classificationOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                classification = option
+                                classificationExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            ExposedDropdownMenuBox(
+                expanded = diagnosisExpanded,
+                onExpandedChange = { diagnosisExpanded = it }
+            ) {
+                OutlinedTextField(
+                    value = diagnosis,
+                    onValueChange = { diagnosis = it },
+                    label = { Text("Diagnosis") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = diagnosisExpanded) },
+                    placeholder = { Text("e.g., Hypertension") },
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
+                )
+                ExposedDropdownMenu(
+                    expanded = diagnosisExpanded,
+                    onDismissRequest = { diagnosisExpanded = false }
+                ) {
+                    diagnosisOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                diagnosis = option
+                                diagnosisExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
                 label = { Text("Notes") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 3
+                minLines = 3,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -109,7 +202,9 @@ fun AddEditMedicationScreen(
                                         frequency = frequency.trim().takeIf { it.isNotEmpty() },
                                         prescribingDoctor = prescribingDoctor.trim().takeIf { it.isNotEmpty() },
                                         pharmacy = pharmacy.trim().takeIf { it.isNotEmpty() },
-                                        notes = notes.trim().takeIf { it.isNotEmpty() }
+                                        notes = notes.trim().takeIf { it.isNotEmpty() },
+                                        classification = classification.trim().takeIf { it.isNotEmpty() },
+                                        diagnosis = diagnosis.trim().takeIf { it.isNotEmpty() }
                                     )
                                 )
                             } else {
@@ -121,7 +216,9 @@ fun AddEditMedicationScreen(
                                         frequency = frequency.trim().takeIf { it.isNotEmpty() },
                                         prescribingDoctor = prescribingDoctor.trim().takeIf { it.isNotEmpty() },
                                         pharmacy = pharmacy.trim().takeIf { it.isNotEmpty() },
-                                        notes = notes.trim().takeIf { it.isNotEmpty() }
+                                        notes = notes.trim().takeIf { it.isNotEmpty() },
+                                        classification = classification.trim().takeIf { it.isNotEmpty() },
+                                        diagnosis = diagnosis.trim().takeIf { it.isNotEmpty() }
                                     )
                                 )
                             }

@@ -40,6 +40,9 @@ fun WellnestApp(viewModel: WellnestViewModel) {
                 },
                 onAddProfile = {
                     navController.navigate(Screen.AddEditProfile.createRoute())
+                },
+                onEditProfile = { profileId ->
+                    navController.navigate(Screen.AddEditProfile.createRoute(profileId))
                 }
             )
         }
@@ -67,6 +70,8 @@ fun WellnestApp(viewModel: WellnestViewModel) {
                 onNavigateToHealthProfile = { navController.navigate(Screen.HealthProfile.route) },
                 onNavigateToInsurance = { navController.navigate(Screen.Insurance.route) },
                 onNavigateToSecurityCodes = { navController.navigate(Screen.SecurityCodes.route) },
+                onNavigateToRoomInfo = { navController.navigate(Screen.RoomInfo.route) },
+                onNavigateToSupplies = { navController.navigate(Screen.Supplies.route) },
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                 onSwitchProfile = {
                     navController.navigate(Screen.ProfileSelection.route)
@@ -192,6 +197,36 @@ fun WellnestApp(viewModel: WellnestViewModel) {
             AddEditSecurityCodeScreen(
                 viewModel = viewModel,
                 codeId = codeId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.RoomInfo.route) {
+            RoomInfoScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Supplies.route) {
+            SuppliesScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onAddSupply = { navController.navigate(Screen.AddEditSupply.createRoute()) },
+                onEditSupply = { id -> navController.navigate(Screen.AddEditSupply.createRoute(id)) }
+            )
+        }
+
+        composable(
+            route = Screen.AddEditSupply.route,
+            arguments = listOf(navArgument("supplyId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val supplyIdArg = backStackEntry.arguments?.getString("supplyId")
+            val supplyId = if (supplyIdArg == "new") null else supplyIdArg?.toLongOrNull()
+
+            AddEditSupplyScreen(
+                viewModel = viewModel,
+                supplyId = supplyId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

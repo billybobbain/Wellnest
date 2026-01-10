@@ -29,6 +29,12 @@ sealed class Screen(val route: String) {
         fun createRoute(codeId: Long? = null) =
             "add_edit_security/${codeId ?: "new"}"
     }
+    object RoomInfo : Screen("room_info")
+    object Supplies : Screen("supplies")
+    object AddEditSupply : Screen("add_edit_supply/{supplyId}") {
+        fun createRoute(supplyId: Long? = null) =
+            "add_edit_supply/${supplyId ?: "new"}"
+    }
     object Settings : Screen("settings")
     object AddEditProfile : Screen("add_edit_profile/{profileId}") {
         fun createRoute(profileId: Long? = null) =

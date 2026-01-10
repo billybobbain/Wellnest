@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -12,9 +13,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.billybobbain.wellnest.WellnestViewModel
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,6 +31,8 @@ fun MainScreen(
     onNavigateToHealthProfile: () -> Unit,
     onNavigateToInsurance: () -> Unit,
     onNavigateToSecurityCodes: () -> Unit,
+    onNavigateToRoomInfo: () -> Unit,
+    onNavigateToSupplies: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onSwitchProfile: () -> Unit
 ) {
@@ -36,8 +43,34 @@ fun MainScreen(
             TopAppBar(
                 title = { Text(currentProfile?.name ?: "Wellnest") },
                 actions = {
+                    // Profile photo or icon
                     IconButton(onClick = onSwitchProfile) {
-                        Icon(Icons.Default.Person, contentDescription = "Switch Profile")
+                        val photoUri = currentProfile?.photoUri
+                        Surface(
+                            modifier = Modifier.size(32.dp),
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            if (photoUri != null) {
+                                AsyncImage(
+                                    model = File(photoUri),
+                                    contentDescription = "Switch Profile",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = "Switch Profile",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(6.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     }
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
@@ -95,6 +128,20 @@ fun MainScreen(
                     title = "Security Codes",
                     icon = Icons.Default.Lock,
                     onClick = onNavigateToSecurityCodes
+                )
+            }
+            item {
+                MenuCard(
+                    title = "Room Info",
+                    icon = Icons.Default.Home,
+                    onClick = onNavigateToRoomInfo
+                )
+            }
+            item {
+                MenuCard(
+                    title = "Supplies",
+                    icon = Icons.Default.ShoppingCart,
+                    onClick = onNavigateToSupplies
                 )
             }
         }

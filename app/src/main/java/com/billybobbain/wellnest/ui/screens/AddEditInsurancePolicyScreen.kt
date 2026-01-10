@@ -1,18 +1,32 @@
 package com.billybobbain.wellnest.ui.screens
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.billybobbain.wellnest.WellnestViewModel
 import com.billybobbain.wellnest.data.InsurancePolicy
 import com.billybobbain.wellnest.data.InsuranceProvider
+import com.billybobbain.wellnest.utils.ImageUtils
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,6 +49,28 @@ fun AddEditInsurancePolicyScreen(
     var notes by remember { mutableStateOf(existingPolicy?.notes ?: "") }
     var showProviderDialog by remember { mutableStateOf(false) }
     var newProviderName by remember { mutableStateOf("") }
+
+    // Card photo state
+    var frontCardPhotoUri by remember { mutableStateOf(existingPolicy?.frontCardPhotoUri) }
+    var backCardPhotoUri by remember { mutableStateOf(existingPolicy?.backCardPhotoUri) }
+    var selectedFrontCardUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedBackCardUri by remember { mutableStateOf<Uri?>(null) }
+
+    val context = LocalContext.current
+
+    // Front card photo picker
+    val frontCardPhotoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        uri?.let { selectedFrontCardUri = it }
+    }
+
+    // Back card photo picker
+    val backCardPhotoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        uri?.let { selectedBackCardUri = it }
+    }
 
     Scaffold(
         topBar = {
@@ -85,6 +121,163 @@ fun AddEditInsurancePolicyScreen(
                                 .weight(1f)
                                 .padding(start = 8.dp)
                         )
+                    }
+                }
+            }
+
+            Divider()
+
+            // Card Photos Section
+            Text("Insurance Card Photos", style = MaterialTheme.typography.titleSmall)
+
+            // Front Card Photo
+            Text("Front of Card", style = MaterialTheme.typography.bodyMedium)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            ) {
+                val displayUri = selectedFrontCardUri
+                    ?: frontCardPhotoUri?.let { Uri.parse(it) }
+
+                if (displayUri != null) {
+                    AsyncImage(
+                        model = displayUri,
+                        contentDescription = "Front of insurance card",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Default.AccountBox,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "No front card image",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        frontCardPhotoLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(if (selectedFrontCardUri != null || frontCardPhotoUri != null) "Change" else "Add Photo")
+                }
+                if (selectedFrontCardUri != null || frontCardPhotoUri != null) {
+                    OutlinedButton(
+                        onClick = {
+                            selectedFrontCardUri = null
+                            frontCardPhotoUri = null
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Remove")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Back Card Photo
+            Text("Back of Card", style = MaterialTheme.typography.bodyMedium)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            ) {
+                val displayUri = selectedBackCardUri
+                    ?: backCardPhotoUri?.let { Uri.parse(it) }
+
+                if (displayUri != null) {
+                    AsyncImage(
+                        model = displayUri,
+                        contentDescription = "Back of insurance card",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Default.AccountBox,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "No back card image",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        backCardPhotoLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(if (selectedBackCardUri != null || backCardPhotoUri != null) "Change" else "Add Photo")
+                }
+                if (selectedBackCardUri != null || backCardPhotoUri != null) {
+                    OutlinedButton(
+                        onClick = {
+                            selectedBackCardUri = null
+                            backCardPhotoUri = null
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Remove")
                     }
                 }
             }
@@ -143,6 +336,45 @@ fun AddEditInsurancePolicyScreen(
                     selectedProfileId?.let { profileId ->
                         selectedProviderId?.let { providerId ->
                             if (policyNumber.isNotBlank()) {
+                                // Use existing policy ID or 0 for new policies
+                                val cardPolicyId = existingPolicy?.id ?: 0L
+
+                                // Process front card photo
+                                val finalFrontCardUri = if (selectedFrontCardUri != null) {
+                                    // New photo selected - save it and delete old one if exists
+                                    frontCardPhotoUri?.let { oldUri ->
+                                        ImageUtils.deleteInsuranceCardImage(context, oldUri)
+                                    }
+                                    ImageUtils.saveInsuranceCardImage(context, selectedFrontCardUri!!, cardPolicyId, "front")
+                                } else if (frontCardPhotoUri == null) {
+                                    // Photo was removed - delete old photo if exists
+                                    existingPolicy?.frontCardPhotoUri?.let { oldUri ->
+                                        ImageUtils.deleteInsuranceCardImage(context, oldUri)
+                                    }
+                                    null
+                                } else {
+                                    // Keep existing photo
+                                    frontCardPhotoUri
+                                }
+
+                                // Process back card photo
+                                val finalBackCardUri = if (selectedBackCardUri != null) {
+                                    // New photo selected - save it and delete old one if exists
+                                    backCardPhotoUri?.let { oldUri ->
+                                        ImageUtils.deleteInsuranceCardImage(context, oldUri)
+                                    }
+                                    ImageUtils.saveInsuranceCardImage(context, selectedBackCardUri!!, cardPolicyId, "back")
+                                } else if (backCardPhotoUri == null) {
+                                    // Photo was removed - delete old photo if exists
+                                    existingPolicy?.backCardPhotoUri?.let { oldUri ->
+                                        ImageUtils.deleteInsuranceCardImage(context, oldUri)
+                                    }
+                                    null
+                                } else {
+                                    // Keep existing photo
+                                    backCardPhotoUri
+                                }
+
                                 if (existingPolicy != null) {
                                     viewModel.updateInsurancePolicy(
                                         existingPolicy.copy(
@@ -152,7 +384,9 @@ fun AddEditInsurancePolicyScreen(
                                             providerPhone = providerPhone.trim().takeIf { it.isNotEmpty() },
                                             coverageType = coverageType.trim().takeIf { it.isNotEmpty() },
                                             insuranceType = insuranceType.trim().takeIf { it.isNotEmpty() },
-                                            notes = notes.trim().takeIf { it.isNotEmpty() }
+                                            notes = notes.trim().takeIf { it.isNotEmpty() },
+                                            frontCardPhotoUri = finalFrontCardUri,
+                                            backCardPhotoUri = finalBackCardUri
                                         )
                                     )
                                 } else {
@@ -165,7 +399,9 @@ fun AddEditInsurancePolicyScreen(
                                             providerPhone = providerPhone.trim().takeIf { it.isNotEmpty() },
                                             coverageType = coverageType.trim().takeIf { it.isNotEmpty() },
                                             insuranceType = insuranceType.trim().takeIf { it.isNotEmpty() },
-                                            notes = notes.trim().takeIf { it.isNotEmpty() }
+                                            notes = notes.trim().takeIf { it.isNotEmpty() },
+                                            frontCardPhotoUri = finalFrontCardUri,
+                                            backCardPhotoUri = finalBackCardUri
                                         )
                                     )
                                 }
