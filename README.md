@@ -2,10 +2,6 @@
 
 A comprehensive care management application for tracking health information, medications, appointments, and other important details for loved ones in assisted living.
 
-## Demo Video
-
-[Watch Demo Video](screenshots/demo.mp4)
-
 ## Features
 
 ### Core Functionality
