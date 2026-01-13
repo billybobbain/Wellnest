@@ -1,11 +1,13 @@
 package com.billybobbain.wellnest.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.billybobbain.wellnest.WellnestViewModel
 import com.billybobbain.wellnest.data.SecurityCode
@@ -49,7 +51,8 @@ fun AddEditSecurityCodeScreen(
                 onValueChange = { label = it },
                 label = { Text("Label *") },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("e.g., Front Door, Room Access") }
+                placeholder = { Text("e.g., Front Door, Room Access") },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
             )
 
             OutlinedTextField(
@@ -65,7 +68,8 @@ fun AddEditSecurityCodeScreen(
                 onValueChange = { notes = it },
                 label = { Text("Notes") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 2
+                minLines = 2,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
 
             Spacer(modifier = Modifier.weight(1f))

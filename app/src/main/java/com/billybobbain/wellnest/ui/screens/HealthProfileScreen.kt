@@ -2,12 +2,14 @@ package com.billybobbain.wellnest.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.billybobbain.wellnest.WellnestViewModel
 import com.billybobbain.wellnest.data.HealthProfile
@@ -87,7 +89,8 @@ fun HealthProfileScreen(
                 onValueChange = { bloodType = it },
                 label = { Text("Blood Type") },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("e.g., O+") }
+                placeholder = { Text("e.g., O+") },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters)
             )
 
             Divider()
@@ -99,7 +102,8 @@ fun HealthProfileScreen(
                 onValueChange = { allergies = it },
                 label = { Text("Allergies") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 2
+                minLines = 2,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
 
             OutlinedTextField(
@@ -107,7 +111,8 @@ fun HealthProfileScreen(
                 onValueChange = { medicalConditions = it },
                 label = { Text("Medical Conditions") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 2
+                minLines = 2,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
 
             Divider()
@@ -118,7 +123,8 @@ fun HealthProfileScreen(
                 value = emergencyContact,
                 onValueChange = { emergencyContact = it },
                 label = { Text("Emergency Contact Name") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
             )
 
             OutlinedTextField(
@@ -133,7 +139,8 @@ fun HealthProfileScreen(
                 onValueChange = { notes = it },
                 label = { Text("Additional Notes") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 3
+                minLines = 3,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
 
             Button(

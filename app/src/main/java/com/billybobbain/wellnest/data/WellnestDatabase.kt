@@ -32,7 +32,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         Settings::class,
         Supply::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class WellnestDatabase : RoomDatabase() {
@@ -85,6 +85,13 @@ abstract class WellnestDatabase : RoomDatabase() {
             }
         }
 
+        // Migration from version 5 to 6: Add lastSelectedProfileId to settings
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE settings ADD COLUMN lastSelectedProfileId INTEGER")
+            }
+        }
+
         fun getDatabase(context: Context): WellnestDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -92,7 +99,7 @@ abstract class WellnestDatabase : RoomDatabase() {
                     WellnestDatabase::class.java,
                     "wellnest_database"
                 )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                     .build()
                 INSTANCE = instance
                 instance

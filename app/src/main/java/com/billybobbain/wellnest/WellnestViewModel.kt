@@ -40,11 +40,16 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
         dao = database.wellnestDao()
         repository = WellnestRepository(dao)
 
-        // Initialize settings
+        // Initialize settings and restore last selected profile
         viewModelScope.launch {
             val currentSettings = repository.settings.first()
             if (currentSettings == null) {
                 repository.insertSettings(Settings())
+            } else {
+                // Restore last selected profile if it exists
+                currentSettings.lastSelectedProfileId?.let { profileId ->
+                    _selectedProfileId.value = profileId
+                }
             }
         }
 
@@ -169,12 +174,20 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
     // Profile operations
     fun selectProfile(profileId: Long) {
         _selectedProfileId.value = profileId
+        // Persist selected profile to survive app restarts
+        viewModelScope.launch {
+            val currentSettings = settings.value ?: Settings()
+            repository.updateSettings(currentSettings.copy(lastSelectedProfileId = profileId))
+        }
     }
 
     fun addProfile(profile: Profile) {
         viewModelScope.launch {
             val id = repository.insertProfile(profile)
             _selectedProfileId.value = id
+            // Persist selected profile to survive app restarts
+            val currentSettings = settings.value ?: Settings()
+            repository.updateSettings(currentSettings.copy(lastSelectedProfileId = id))
         }
     }
 
@@ -189,6 +202,9 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
             repository.deleteProfile(profile)
             if (_selectedProfileId.value == profile.id) {
                 _selectedProfileId.value = null
+                // Clear persisted selection when deleting current profile
+                val currentSettings = settings.value ?: Settings()
+                repository.updateSettings(currentSettings.copy(lastSelectedProfileId = null))
             }
         }
     }

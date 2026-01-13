@@ -8,6 +8,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -20,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.billybobbain.wellnest.WellnestViewModel
@@ -296,7 +298,8 @@ fun AddEditInsurancePolicyScreen(
                 onValueChange = { insuranceType = it },
                 label = { Text("Insurance Type") },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("e.g., Medical, Dental, Medicare") }
+                placeholder = { Text("e.g., Medical, Dental, Medicare") },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
             )
 
             OutlinedTextField(
@@ -304,7 +307,8 @@ fun AddEditInsurancePolicyScreen(
                 onValueChange = { coverageType = it },
                 label = { Text("Coverage Type") },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("e.g., PPO, HMO") }
+                placeholder = { Text("e.g., PPO, HMO") },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters)
             )
 
             OutlinedTextField(
@@ -326,7 +330,8 @@ fun AddEditInsurancePolicyScreen(
                 onValueChange = { notes = it },
                 label = { Text("Notes") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 2
+                minLines = 2,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -427,7 +432,8 @@ fun AddEditInsurancePolicyScreen(
                     value = newProviderName,
                     onValueChange = { newProviderName = it },
                     label = { Text("Provider Name") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
                 )
             },
             confirmButton = {

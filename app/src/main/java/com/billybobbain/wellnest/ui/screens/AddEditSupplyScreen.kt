@@ -1,11 +1,13 @@
 package com.billybobbain.wellnest.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.billybobbain.wellnest.WellnestViewModel
 import com.billybobbain.wellnest.data.Supply
@@ -48,7 +50,8 @@ fun AddEditSupplyScreen(
                 onValueChange = { itemName = it },
                 label = { Text("Item Name *") },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("e.g., Milk, Dr. B") }
+                placeholder = { Text("e.g., Milk, Dr. B") },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
             )
 
             OutlinedTextField(
@@ -57,7 +60,8 @@ fun AddEditSupplyScreen(
                 label = { Text("Notes") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
-                placeholder = { Text("Any special notes...") }
+                placeholder = { Text("Any special notes...") },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
 
             Text(

@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class Settings(
     @PrimaryKey
     val id: Int = 1, // Only one settings row
-    val selectedTheme: String = "Teal"
+    val selectedTheme: String = "Teal",
+    val lastSelectedProfileId: Long? = null // Persists selected profile across app restarts
 )
