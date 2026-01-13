@@ -4,11 +4,13 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.billybobbain.wellnest.data.*
+import com.billybobbain.wellnest.utils.TestDataGenerator
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class WellnestViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: WellnestRepository
+    private val dao: WellnestDao
 
     // Current selected profile
     private val _selectedProfileId = MutableStateFlow<Long?>(null)
@@ -35,7 +37,8 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
 
     init {
         val database = WellnestDatabase.getDatabase(application)
-        repository = WellnestRepository(database.wellnestDao())
+        dao = database.wellnestDao()
+        repository = WellnestRepository(dao)
 
         // Initialize settings
         viewModelScope.launch {
@@ -343,6 +346,15 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             val currentSettings = settings.value ?: Settings()
             repository.updateSettings(currentSettings.copy(selectedTheme = theme))
+        }
+    }
+
+    // Developer / Test operations
+    fun generateTestProfile() {
+        viewModelScope.launch {
+            val profileId = TestDataGenerator.generateTestProfile(dao)
+            // Automatically select the new test profile
+            selectProfile(profileId)
         }
     }
 }

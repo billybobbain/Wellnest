@@ -68,6 +68,26 @@ fun SettingsScreen(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            HorizontalDivider()
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedButton(
+                onClick = { viewModel.generateTestProfile() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Generate Test Profile (Bilbo)")
+            }
+
+            Text(
+                "Creates a complete test profile with sample data for screenshots",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }
