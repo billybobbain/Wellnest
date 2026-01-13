@@ -279,6 +279,7 @@ fun MedicationCard(
 
 /**
  * Format medications list for sharing via text/email
+ * Compact format: medication name, what it's for, and notes only
  */
 private fun formatMedicationsForSharing(medications: List<Medication>, profileName: String): String {
     if (medications.isEmpty()) {
@@ -298,36 +299,12 @@ private fun formatMedicationsForSharing(medications: List<Medication>, profileNa
         medications.forEachIndexed { index, med ->
             appendLine("${index + 1}. ${med.drugName}")
 
-            if (!med.dosage.isNullOrEmpty()) {
-                appendLine("   Dosage: ${med.dosage}")
-            }
-
-            if (!med.frequency.isNullOrEmpty()) {
-                appendLine("   Frequency: ${med.frequency}")
-            }
-
             if (!med.diagnosis.isNullOrEmpty()) {
                 appendLine("   For: ${med.diagnosis}")
             }
 
-            if (!med.prescribingDoctor.isNullOrEmpty()) {
-                appendLine("   Prescribed by: ${med.prescribingDoctor}")
-            }
-
-            if (med.startDate != null) {
-                appendLine("   Started: ${dateFormat.format(java.util.Date(med.startDate))}")
-            }
-
             if (!med.notes.isNullOrEmpty()) {
                 appendLine("   Notes: ${med.notes}")
-            }
-
-            if (!med.classification.isNullOrEmpty()) {
-                appendLine("   Classification: ${med.classification}")
-            }
-
-            if (!med.pharmacy.isNullOrEmpty()) {
-                appendLine("   Pharmacy: ${med.pharmacy}")
             }
 
             appendLine()
