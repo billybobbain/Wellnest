@@ -29,6 +29,14 @@ A comprehensive care management application for tracking health information, med
   - Last replenished date tracking
   - Quick "Mark as Replenished" button
   - No alerts - just a reference list
+- **Message Clarification** (Optional): AI-powered message clarification for hard-to-read text messages:
+  - Helps understand garbled or fragmented messages from loved ones with vision problems
+  - Bring Your Own Key (BYOK) - users provide their own Claude API key
+  - Secure encrypted storage for API keys (AES256-GCM with hardware-backed encryption)
+  - Uses Claude Haiku model (~$0.0002 per message, ~25,000 messages on free tier)
+  - Shows clarified messages by default in the messages list
+  - Completely optional - app works fully without this feature
+  - Privacy-focused: your API key only communicates with Claude API
 
 ### UI Features
 - **6 Color Themes**: Teal, Purple, Blue, Green, Orange, Pink (with light/dark mode support)
@@ -41,7 +49,7 @@ A comprehensive care management application for tracking health information, med
 - **Language**: Kotlin
 - **UI Framework**: Jetpack Compose
 - **Architecture Pattern**: MVVM (Model-View-ViewModel)
-- **Database**: Room (SQLite) version 5 with the following entities:
+- **Database**: Room (SQLite) version 7 with the following entities:
   - Profile (with room dimension fields)
   - Medication
   - Appointment
@@ -51,7 +59,8 @@ A comprehensive care management application for tracking health information, med
   - InsurancePolicy (with photo URI fields)
   - SecurityCode
   - Supply
-  - Settings
+  - Message (with original and clarified text)
+  - Settings (with last selected profile and theme preference)
 - **State Management**: StateFlow for reactive UI updates
 - **Navigation**: Jetpack Compose Navigation
 
@@ -90,6 +99,7 @@ All entities use foreign keys with cascade delete to maintain referential integr
 - Profile (1) → (many) InsurancePolicies
 - Profile (1) → (many) SecurityCodes
 - Profile (1) → (many) Supplies
+- Profile (1) → (many) Messages
 - InsuranceProvider (1) → (many) InsurancePolicies
 
 ### Database Migrations
@@ -97,6 +107,8 @@ The database uses explicit migrations to preserve user data across schema change
 - v2→v3: Added insurance card photo fields
 - v3→v4: Added room dimension fields to profiles
 - v4→v5: Created supplies table
+- v5→v6: Added lastSelectedProfileId to settings (persists profile selection across app restarts)
+- v6→v7: Created messages table for message clarification feature
 
 ## Screenshots
 
@@ -191,16 +203,23 @@ com.billybobbain.wellnest/
 │   ├── InsurancePolicy.kt
 │   ├── SecurityCode.kt
 │   ├── Supply.kt
+│   ├── Message.kt
 │   ├── Settings.kt
 │   ├── WellnestDao.kt
 │   ├── WellnestDatabase.kt
 │   └── WellnestRepository.kt
 ├── ui/
 │   ├── screens/              # All screen composables
+│   │   ├── MessagesScreen.kt
+│   │   ├── AddEditMessageScreen.kt
+│   │   ├── SettingsScreen.kt
+│   │   └── ...
 │   └── theme/                # Theme, Color, Type definitions
 ├── utils/                    # Utility classes
 │   ├── ImageUtils.kt
-│   └── MedicationImporter.kt
+│   ├── MedicationImporter.kt
+│   ├── ClaudeApiService.kt   # AI message clarification service
+│   └── EncryptedPrefsManager.kt  # Secure API key storage
 ├── MainActivity.kt
 ├── WellnestApp.kt           # Navigation setup
 ├── WellnestViewModel.kt     # Main ViewModel
@@ -214,6 +233,7 @@ com.billybobbain.wellnest/
 - All phone numbers, addresses, and personal information are stored locally on device
 - No cloud sync or backup - all data is local only
 - Profile photos and insurance card images stored in app-private storage
+- **AI Clarification Privacy**: When enabled, only the message text and your API key are sent to Claude API. No other personal information is transmitted. Your API key is stored encrypted using hardware-backed AES256-GCM encryption.
 
 ## Icon
 
