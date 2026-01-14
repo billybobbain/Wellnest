@@ -78,12 +78,14 @@ object ClaudeApiService {
         return withContext(Dispatchers.IO) {
             try {
                 val prompt = """
-                    This is a text message from an elderly person with vision problems. The message has spacing and typing errors but conveys important information. Please clarify what they're trying to say while preserving their voice and tone. Don't make it sound robotic - keep it natural and conversational.
+                    This is a text message from an elderly person with vision problems. The message has spacing and typing errors but conveys important information.
+
+                    Your task: Rewrite the message below to fix typos and spacing while preserving their natural voice and tone.
+
+                    CRITICAL: Output ONLY the corrected message text. Do not include any preamble, commentary, explanation, or phrases like "Here's what they're saying" or "Let me clarify". Just output the fixed message as if you were the person sending it.
 
                     Original message:
                     $originalText
-
-                    Please provide only the clarified version of the message, nothing else.
                 """.trimIndent()
 
                 val requestBody = ClaudeRequest(
