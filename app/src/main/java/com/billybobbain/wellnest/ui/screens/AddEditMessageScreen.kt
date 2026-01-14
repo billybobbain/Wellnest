@@ -217,7 +217,7 @@ fun AddEditMessageScreen(
                 OutlinedTextField(
                     value = interpretedText,
                     onValueChange = { interpretedText = it },
-                    label = { Text("Interpreted Text") },
+                    label = { Text("Clarified Text") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 4,
                     placeholder = { Text("Paste the clarified version here...") },

@@ -164,22 +164,25 @@ fun MessageCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(4.dp))
+
+                // Show clarified version by default if available, otherwise show original
+                val displayText = message.interpretedText ?: message.originalText
                 Text(
-                    text = message.originalText.take(100) + if (message.originalText.length > 100) "..." else "",
+                    text = displayText.take(100) + if (displayText.length > 100) "..." else "",
                     style = MaterialTheme.typography.bodyMedium
                 )
 
                 if (message.interpretedText != null) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "✓ Interpreted",
+                        text = "✓ Clarified",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
                 } else {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Not interpreted yet",
+                        text = "Not clarified yet",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
