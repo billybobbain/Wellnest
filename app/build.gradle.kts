@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
 }
 
 android {
@@ -98,6 +99,15 @@ dependencies {
 
     // ExifInterface for image rotation handling
     implementation("androidx.exifinterface:exifinterface:1.3.7")
+
+    // Encrypted SharedPreferences for secure API key storage
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // HTTP client for API calls
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // JSON parsing
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

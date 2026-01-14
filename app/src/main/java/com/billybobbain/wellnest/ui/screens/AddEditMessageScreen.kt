@@ -14,11 +14,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.billybobbain.wellnest.WellnestViewModel
 import com.billybobbain.wellnest.data.Message
+import com.billybobbain.wellnest.utils.ClaudeApiService
+import com.billybobbain.wellnest.utils.EncryptedPrefsManager
+import kotlinx.coroutines.launch
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,6 +40,15 @@ fun AddEditMessageScreen(
     var originalText by remember { mutableStateOf(existingMessage?.originalText ?: "") }
     var interpretedText by remember { mutableStateOf(existingMessage?.interpretedText ?: "") }
     var notes by remember { mutableStateOf(existingMessage?.notes ?: "") }
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // AI Clarification state
+    val aiEnabled = remember { EncryptedPrefsManager.isAiEnabled(context) }
+    val apiKey = remember { EncryptedPrefsManager.getClaudeApiKey(context) }
+    var clarifying by remember { mutableStateOf(false) }
+    var clarifyError by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -129,16 +142,77 @@ fun AddEditMessageScreen(
                 HorizontalDivider()
 
                 Text(
-                    text = "Interpreted Version",
+                    text = "Clarified Version",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                Text(
-                    text = "For now, paste the interpreted text manually. AI interpretation coming soon!",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                // Clarify button (only if AI enabled and API key configured)
+                if (aiEnabled && !apiKey.isNullOrBlank()) {
+                    Button(
+                        onClick = {
+                            if (originalText.isNotBlank()) {
+                                clarifying = true
+                                clarifyError = null
+                                scope.launch {
+                                    val result = ClaudeApiService.clarifyMessage(originalText.trim(), apiKey)
+                                    clarifying = false
+                                    result.fold(
+                                        onSuccess = { clarified ->
+                                            interpretedText = clarified
+                                        },
+                                        onFailure = { error ->
+                                            clarifyError = error.message
+                                        }
+                                    )
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = originalText.isNotBlank() && !clarifying
+                    ) {
+                        if (clarifying) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text(if (clarifying) "Clarifying..." else "🔄 Clarify with AI")
+                    }
+
+                    if (clarifyError != null) {
+                        Text(
+                            text = clarifyError!!,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                } else {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                "💡 AI Clarification: ",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                if (!aiEnabled) {
+                                    "Enable AI clarification in Settings to use this feature."
+                                } else {
+                                    "Configure your Claude API key in Settings to use AI clarification."
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
 
                 OutlinedTextField(
                     value = interpretedText,
