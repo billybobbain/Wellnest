@@ -64,6 +64,29 @@ A comprehensive care management application for tracking health information, med
 - **State Management**: StateFlow for reactive UI updates
 - **Navigation**: Jetpack Compose Navigation
 
+## Setting Up AI Message Clarification (Optional)
+
+The AI message clarification feature is completely optional but can be very helpful for understanding hard-to-read messages from loved ones with vision problems.
+
+### Getting a Free Claude API Key
+
+1. Visit [console.anthropic.com](https://console.anthropic.com)
+2. Sign up for a free account (no credit card required)
+3. Navigate to **API Keys** in the console
+4. Click **Create Key** and copy your API key
+5. In the Wellnest app, go to **Settings** → **AI Message Clarification**
+6. Toggle on "Enable AI Clarification"
+7. Paste your API key and tap **Test Connection** to verify it works
+
+**Free Tier Details:**
+- New accounts receive **$5 in free credit**
+- Each message clarification costs approximately **$0.0002** (two-hundredths of a cent)
+- Your free credit provides approximately **25,000 message clarifications**
+- No credit card required to get started
+- Credit expires after a few months, but you can add payment details if needed
+
+**Privacy:** Your API key is stored encrypted on your device using hardware-backed AES256-GCM encryption. Only the message text and your API key are sent to Claude API - no other personal information is transmitted.
+
 ## Building the Project
 
 ### Requirements
