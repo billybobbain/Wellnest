@@ -33,6 +33,7 @@ fun MainScreen(
     onNavigateToSecurityCodes: () -> Unit,
     onNavigateToRoomInfo: () -> Unit,
     onNavigateToSupplies: () -> Unit,
+    onNavigateToMessages: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onSwitchProfile: () -> Unit
 ) {
@@ -142,6 +143,13 @@ fun MainScreen(
                     title = "Supplies",
                     icon = Icons.Default.ShoppingCart,
                     onClick = onNavigateToSupplies
+                )
+            }
+            item {
+                MenuCard(
+                    title = "Messages",
+                    icon = Icons.Default.Email,
+                    onClick = onNavigateToMessages
                 )
             }
         }

@@ -110,4 +110,16 @@ class WellnestRepository(private val dao: WellnestDao) {
     suspend fun insertSettings(settings: Settings) = dao.insertSettings(settings)
 
     suspend fun updateSettings(settings: Settings) = dao.updateSettings(settings)
+
+    // Message operations
+    fun getMessagesForProfile(profileId: Long, limit: Int = 10): Flow<List<Message>> =
+        dao.getMessagesForProfile(profileId, limit)
+
+    fun getMessage(id: Long): Flow<Message?> = dao.getMessage(id)
+
+    suspend fun insertMessage(message: Message): Long = dao.insertMessage(message)
+
+    suspend fun updateMessage(message: Message) = dao.updateMessage(message)
+
+    suspend fun deleteMessage(message: Message) = dao.deleteMessage(message)
 }

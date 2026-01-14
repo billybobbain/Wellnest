@@ -28,6 +28,7 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
     val insurancePolicies: StateFlow<List<InsurancePolicy>>
     val securityCodes: StateFlow<List<SecurityCode>>
     val supplies: StateFlow<List<Supply>>
+    val messages: StateFlow<List<Message>>
 
     // Insurance providers
     val insuranceProviders: StateFlow<List<InsuranceProvider>>
@@ -149,6 +150,18 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
         supplies = selectedProfileId.flatMapLatest { profileId ->
             if (profileId != null) {
                 repository.getSuppliesForProfile(profileId)
+            } else {
+                flowOf(emptyList())
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+        messages = selectedProfileId.flatMapLatest { profileId ->
+            if (profileId != null) {
+                repository.getMessagesForProfile(profileId, limit = 10)
             } else {
                 flowOf(emptyList())
             }
@@ -354,6 +367,25 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
     fun deleteSupply(supply: Supply) {
         viewModelScope.launch {
             repository.deleteSupply(supply)
+        }
+    }
+
+    // Message operations
+    fun addMessage(message: Message) {
+        viewModelScope.launch {
+            repository.insertMessage(message)
+        }
+    }
+
+    fun updateMessage(message: Message) {
+        viewModelScope.launch {
+            repository.updateMessage(message)
+        }
+    }
+
+    fun deleteMessage(message: Message) {
+        viewModelScope.launch {
+            repository.deleteMessage(message)
         }
     }
 

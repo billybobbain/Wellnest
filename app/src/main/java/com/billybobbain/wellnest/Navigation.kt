@@ -35,6 +35,11 @@ sealed class Screen(val route: String) {
         fun createRoute(supplyId: Long? = null) =
             "add_edit_supply/${supplyId ?: "new"}"
     }
+    object Messages : Screen("messages")
+    object AddEditMessage : Screen("add_edit_message/{messageId}") {
+        fun createRoute(messageId: Long? = null) =
+            "add_edit_message/${messageId ?: "new"}"
+    }
     object Settings : Screen("settings")
     object AddEditProfile : Screen("add_edit_profile/{profileId}") {
         fun createRoute(profileId: Long? = null) =

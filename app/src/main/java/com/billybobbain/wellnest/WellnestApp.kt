@@ -72,6 +72,7 @@ fun WellnestApp(viewModel: WellnestViewModel) {
                 onNavigateToSecurityCodes = { navController.navigate(Screen.SecurityCodes.route) },
                 onNavigateToRoomInfo = { navController.navigate(Screen.RoomInfo.route) },
                 onNavigateToSupplies = { navController.navigate(Screen.Supplies.route) },
+                onNavigateToMessages = { navController.navigate(Screen.Messages.route) },
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                 onSwitchProfile = {
                     navController.navigate(Screen.ProfileSelection.route)
@@ -227,6 +228,29 @@ fun WellnestApp(viewModel: WellnestViewModel) {
             AddEditSupplyScreen(
                 viewModel = viewModel,
                 supplyId = supplyId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Messages.route) {
+            MessagesScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onAddMessage = { navController.navigate(Screen.AddEditMessage.createRoute()) },
+                onEditMessage = { id -> navController.navigate(Screen.AddEditMessage.createRoute(id)) }
+            )
+        }
+
+        composable(
+            route = Screen.AddEditMessage.route,
+            arguments = listOf(navArgument("messageId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val messageIdArg = backStackEntry.arguments?.getString("messageId")
+            val messageId = if (messageIdArg == "new") null else messageIdArg?.toLongOrNull()
+
+            AddEditMessageScreen(
+                viewModel = viewModel,
+                messageId = messageId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

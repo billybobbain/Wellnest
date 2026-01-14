@@ -137,4 +137,20 @@ interface WellnestDao {
 
     @Update
     suspend fun updateSettings(settings: Settings)
+
+    // Message operations
+    @Query("SELECT * FROM messages WHERE profileId = :profileId ORDER BY timestamp DESC LIMIT :limit")
+    fun getMessagesForProfile(profileId: Long, limit: Int = 10): Flow<List<Message>>
+
+    @Query("SELECT * FROM messages WHERE id = :id")
+    fun getMessage(id: Long): Flow<Message?>
+
+    @Insert
+    suspend fun insertMessage(message: Message): Long
+
+    @Update
+    suspend fun updateMessage(message: Message)
+
+    @Delete
+    suspend fun deleteMessage(message: Message)
 }

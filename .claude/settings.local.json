@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd message interpreter feature infrastructure\n\nDatabase \\(v7\\):\n- Add Message entity with originalText, interpretedText, notes, timestamp\n- Create migration 6→7 for messages table\n- Add Message DAO operations \\(query, insert, update, delete\\)\n- Add Message repository methods\n- Add Message StateFlow to ViewModel\n\nUI Screens:\n- MessagesScreen: Show message history for selected profile\n- AddEditMessageScreen: Two-field form \\(original + interpreted text\\)\n- Both screens display profile picture + name in context bar for safety\n\nNavigation:\n- Add Messages and AddEditMessage routes\n- Wire up navigation from Main screen\n- Add Messages menu item with email icon\n\nFeatures:\n- Profile-scoped messages \\(foreign key with cascade delete\\)\n- Last 10 messages displayed by default\n- Manual interpretation workflow \\(paste both fields\\)\n- AI interpretation to be added later\n\nSafety:\n- Profile picture and name displayed on all message screens\n- Messages tied to specific profile \\(can''t mix up\\)\n- Cascade delete when profile deleted\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)"
     ]
   }
 }

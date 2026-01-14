@@ -30,9 +30,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         InsurancePolicy::class,
         SecurityCode::class,
         Settings::class,
-        Supply::class
+        Supply::class,
+        Message::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class WellnestDatabase : RoomDatabase() {
@@ -92,6 +93,26 @@ abstract class WellnestDatabase : RoomDatabase() {
             }
         }
 
+        // Migration from version 6 to 7: Add messages table
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS messages (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        profileId INTEGER NOT NULL,
+                        originalText TEXT NOT NULL,
+                        interpretedText TEXT,
+                        timestamp INTEGER NOT NULL,
+                        notes TEXT,
+                        FOREIGN KEY(profileId) REFERENCES profiles(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_messages_profileId ON messages(profileId)")
+            }
+        }
+
         fun getDatabase(context: Context): WellnestDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -99,7 +120,7 @@ abstract class WellnestDatabase : RoomDatabase() {
                     WellnestDatabase::class.java,
                     "wellnest_database"
                 )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                     .build()
                 INSTANCE = instance
                 instance
