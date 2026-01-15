@@ -6,7 +6,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -50,13 +50,36 @@ fun AddEditMessageScreen(
     var clarifying by remember { mutableStateOf(false) }
     var clarifyError by remember { mutableStateOf<String?>(null) }
 
+    // Track previous text length to detect paste
+    var previousTextLength by remember { mutableStateOf(originalText.length) }
+
+    // Function to trigger clarification
+    fun triggerClarification(text: String) {
+        if (text.isNotBlank() && aiEnabled && !apiKey.isNullOrBlank() && !clarifying) {
+            clarifying = true
+            clarifyError = null
+            scope.launch {
+                val result = ClaudeApiService.clarifyMessage(text.trim(), apiKey)
+                clarifying = false
+                result.fold(
+                    onSuccess = { clarified ->
+                        interpretedText = clarified
+                    },
+                    onFailure = { error ->
+                        clarifyError = error.message
+                    }
+                )
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(if (messageId == null) "Add Message" else "View Message") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -131,7 +154,16 @@ fun AddEditMessageScreen(
 
                 OutlinedTextField(
                     value = originalText,
-                    onValueChange = { originalText = it },
+                    onValueChange = { newText ->
+                        val lengthDelta = newText.length - previousTextLength
+                        originalText = newText
+                        previousTextLength = newText.length
+
+                        // Auto-clarify on paste (10+ characters added at once)
+                        if (lengthDelta >= 10 && messageId == null) {
+                            triggerClarification(newText)
+                        }
+                    },
                     label = { Text("Original Text *") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 4,
@@ -150,24 +182,7 @@ fun AddEditMessageScreen(
                 // Clarify button (only if AI enabled and API key configured)
                 if (aiEnabled && !apiKey.isNullOrBlank()) {
                     Button(
-                        onClick = {
-                            if (originalText.isNotBlank()) {
-                                clarifying = true
-                                clarifyError = null
-                                scope.launch {
-                                    val result = ClaudeApiService.clarifyMessage(originalText.trim(), apiKey)
-                                    clarifying = false
-                                    result.fold(
-                                        onSuccess = { clarified ->
-                                            interpretedText = clarified
-                                        },
-                                        onFailure = { error ->
-                                            clarifyError = error.message
-                                        }
-                                    )
-                                }
-                            }
-                        },
+                        onClick = { triggerClarification(originalText) },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = originalText.isNotBlank() && !clarifying
                     ) {
