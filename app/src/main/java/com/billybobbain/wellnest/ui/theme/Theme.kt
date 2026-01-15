@@ -14,73 +14,97 @@ import androidx.core.view.WindowCompat
 private val TealLightColorScheme = lightColorScheme(
     primary = TealPrimary,
     secondary = TealSecondary,
-    tertiary = TealTertiary
+    tertiary = TealTertiary,
+    primaryContainer = TealContainer,
+    onPrimaryContainer = TealOnContainer
 )
 
 private val TealDarkColorScheme = darkColorScheme(
     primary = TealSecondary,
     secondary = TealPrimary,
-    tertiary = TealTertiary
+    tertiary = TealTertiary,
+    primaryContainer = TealTertiary,
+    onPrimaryContainer = TealContainer
 )
 
 private val PurpleLightColorScheme = lightColorScheme(
     primary = PurplePrimary,
     secondary = PurpleSecondary,
-    tertiary = PurpleTertiary
+    tertiary = PurpleTertiary,
+    primaryContainer = PurpleContainer,
+    onPrimaryContainer = PurpleOnContainer
 )
 
 private val PurpleDarkColorScheme = darkColorScheme(
     primary = PurpleSecondary,
     secondary = PurplePrimary,
-    tertiary = PurpleTertiary
+    tertiary = PurpleTertiary,
+    primaryContainer = PurpleTertiary,
+    onPrimaryContainer = PurpleContainer
 )
 
 private val BlueLightColorScheme = lightColorScheme(
     primary = BluePrimary,
     secondary = BlueSecondary,
-    tertiary = BlueTertiary
+    tertiary = BlueTertiary,
+    primaryContainer = BlueContainer,
+    onPrimaryContainer = BlueOnContainer
 )
 
 private val BlueDarkColorScheme = darkColorScheme(
     primary = BlueSecondary,
     secondary = BluePrimary,
-    tertiary = BlueTertiary
+    tertiary = BlueTertiary,
+    primaryContainer = BlueTertiary,
+    onPrimaryContainer = BlueContainer
 )
 
 private val GreenLightColorScheme = lightColorScheme(
     primary = GreenPrimary,
     secondary = GreenSecondary,
-    tertiary = GreenTertiary
+    tertiary = GreenTertiary,
+    primaryContainer = GreenContainer,
+    onPrimaryContainer = GreenOnContainer
 )
 
 private val GreenDarkColorScheme = darkColorScheme(
     primary = GreenSecondary,
     secondary = GreenPrimary,
-    tertiary = GreenTertiary
+    tertiary = GreenTertiary,
+    primaryContainer = GreenTertiary,
+    onPrimaryContainer = GreenContainer
 )
 
 private val OrangeLightColorScheme = lightColorScheme(
     primary = OrangePrimary,
     secondary = OrangeSecondary,
-    tertiary = OrangeTertiary
+    tertiary = OrangeTertiary,
+    primaryContainer = OrangeContainer,
+    onPrimaryContainer = OrangeOnContainer
 )
 
 private val OrangeDarkColorScheme = darkColorScheme(
     primary = OrangeSecondary,
     secondary = OrangePrimary,
-    tertiary = OrangeTertiary
+    tertiary = OrangeTertiary,
+    primaryContainer = OrangeTertiary,
+    onPrimaryContainer = OrangeContainer
 )
 
 private val PinkLightColorScheme = lightColorScheme(
     primary = PinkPrimary,
     secondary = PinkSecondary,
-    tertiary = PinkTertiary
+    tertiary = PinkTertiary,
+    primaryContainer = PinkContainer,
+    onPrimaryContainer = PinkOnContainer
 )
 
 private val PinkDarkColorScheme = darkColorScheme(
     primary = PinkSecondary,
     secondary = PinkPrimary,
-    tertiary = PinkTertiary
+    tertiary = PinkTertiary,
+    primaryContainer = PinkTertiary,
+    onPrimaryContainer = PinkContainer
 )
 
 @Composable
