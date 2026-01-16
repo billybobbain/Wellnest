@@ -110,10 +110,17 @@ fun SupplyCard(
 
                 // Show last replenished date
                 if (supply.lastReplenished != null) {
-                    val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
-                    val dateStr = dateFormat.format(Date(supply.lastReplenished))
+                    val daysAgo = ((System.currentTimeMillis() - supply.lastReplenished) / (1000 * 60 * 60 * 24)).toInt()
+                    val timeText = when {
+                        daysAgo == 0 -> "Today"
+                        daysAgo == 1 -> "Yesterday"
+                        daysAgo < 7 -> "$daysAgo days ago"
+                        daysAgo < 14 -> "1 week ago"
+                        daysAgo < 30 -> "${daysAgo / 7} weeks ago"
+                        else -> "${daysAgo / 30} months ago"
+                    }
                     Text(
-                        text = "Last: $dateStr",
+                        text = "Last: $timeText",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

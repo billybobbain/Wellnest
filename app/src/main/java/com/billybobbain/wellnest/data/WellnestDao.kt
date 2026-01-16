@@ -116,7 +116,8 @@ interface WellnestDao {
     suspend fun deleteSecurityCode(securityCode: SecurityCode)
 
     // Supply operations
-    @Query("SELECT * FROM supplies WHERE profileId = :profileId ORDER BY itemName ASC")
+    // Sort by last replenished (oldest first, never replenished at top), then by name
+    @Query("SELECT * FROM supplies WHERE profileId = :profileId ORDER BY lastReplenished ASC, itemName ASC")
     fun getSuppliesForProfile(profileId: Long): Flow<List<Supply>>
 
     @Insert
