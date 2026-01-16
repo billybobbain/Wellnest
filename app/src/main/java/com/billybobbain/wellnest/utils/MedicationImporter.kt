@@ -1,10 +1,62 @@
 package com.billybobbain.wellnest.utils
 
 import com.billybobbain.wellnest.data.Medication
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 object MedicationImporter {
+
+    @Serializable
+    data class MedicationJson(
+        val drugName: String,
+        val dosage: String? = null,
+        val frequency: String? = null,
+        val prescribingDoctor: String? = null,
+        val diagnosis: String? = null,
+        val notes: String? = null
+    )
+
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+    }
+
+    /**
+     * Parse JSON from vision API and return list of medications
+     */
+    fun parseJson(jsonContent: String, profileId: Long): Result<List<Medication>> {
+        return try {
+            val cleanedJson = jsonContent.trim()
+                .removePrefix("```json")
+                .removePrefix("```")
+                .removeSuffix("```")
+                .trim()
+
+            val medicationJsonList = json.decodeFromString<List<MedicationJson>>(cleanedJson)
+
+            val medications = medicationJsonList.map { medJson ->
+                Medication(
+                    profileId = profileId,
+                    drugName = medJson.drugName,
+                    dosage = medJson.dosage?.takeIf { it.isNotBlank() },
+                    frequency = medJson.frequency?.takeIf { it.isNotBlank() },
+                    prescribingDoctor = medJson.prescribingDoctor?.takeIf { it.isNotBlank() },
+                    pharmacy = null,
+                    startDate = null,
+                    refillDate = null,
+                    notes = medJson.notes?.takeIf { it.isNotBlank() },
+                    classification = null,
+                    diagnosis = medJson.diagnosis?.takeIf { it.isNotBlank() }
+                )
+            }
+
+            Result.success(medications)
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to parse JSON: ${e.message}"))
+        }
+    }
 
     /**
      * Parse CSV and return list of medications

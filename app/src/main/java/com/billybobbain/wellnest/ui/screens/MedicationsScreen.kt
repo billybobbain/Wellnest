@@ -6,11 +6,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import android.content.Intent
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
+import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -37,6 +38,8 @@ fun MedicationsScreen(
     val medications by viewModel.medications.collectAsState()
     val currentProfile by viewModel.currentProfile.collectAsState()
     var showImportDialog by remember { mutableStateOf(false) }
+    var showPhotoImportDialog by remember { mutableStateOf(false) }
+    var showImportMenu by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     Scaffold(
@@ -45,7 +48,7 @@ fun MedicationsScreen(
                 title = { Text("Medications") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -64,9 +67,36 @@ fun MedicationsScreen(
                     ) {
                         Icon(Icons.Default.Share, contentDescription = "Share Medications")
                     }
-                    // Import button
-                    IconButton(onClick = { showImportDialog = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Import from CSV")
+                    // Import menu
+                    Box {
+                        IconButton(onClick = { showImportMenu = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Import options")
+                        }
+                        DropdownMenu(
+                            expanded = showImportMenu,
+                            onDismissRequest = { showImportMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Import from Photo") },
+                                onClick = {
+                                    showImportMenu = false
+                                    showPhotoImportDialog = true
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Add, contentDescription = null)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Import from CSV") },
+                                onClick = {
+                                    showImportMenu = false
+                                    showImportDialog = true
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Add, contentDescription = null)
+                                }
+                            )
+                        }
                     }
                 }
             )
@@ -105,11 +135,19 @@ fun MedicationsScreen(
         }
     }
 
-    // Import Dialog
+    // CSV Import Dialog
     if (showImportDialog) {
         ImportMedicationsDialog(
             viewModel = viewModel,
             onDismiss = { showImportDialog = false }
+        )
+    }
+
+    // Photo Import Dialog
+    if (showPhotoImportDialog) {
+        ImportFromPhotoDialog(
+            viewModel = viewModel,
+            onDismiss = { showPhotoImportDialog = false }
         )
     }
 }
@@ -275,6 +313,171 @@ fun MedicationCard(
             }
         }
     }
+}
+
+@Composable
+fun ImportFromPhotoDialog(
+    viewModel: WellnestViewModel,
+    onDismiss: () -> Unit
+) {
+    var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var processing by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var successMessage by remember { mutableStateOf<String?>(null) }
+    val currentProfile by viewModel.currentProfile.collectAsState()
+    val context = LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+
+    // Image picker
+    val imagePickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        selectedImageUri = uri
+        errorMessage = null
+        successMessage = null
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Import from Photo") },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Select a photo of your medication list. Claude AI will extract the information.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Button(
+                    onClick = { imagePickerLauncher.launch("image/*") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !processing
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (selectedImageUri == null) "Select Photo" else "Change Photo")
+                }
+
+                if (selectedImageUri != null) {
+                    Text(
+                        text = "✓ Photo selected",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                if (processing) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    Text(
+                        text = "Processing image with AI...",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                if (successMessage != null) {
+                    Text(
+                        text = successMessage!!,
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (currentProfile == null) {
+                        errorMessage = "No profile selected"
+                        return@Button
+                    }
+
+                    if (selectedImageUri == null) {
+                        errorMessage = "Please select a photo"
+                        return@Button
+                    }
+
+                    val aiEnabled = com.billybobbain.wellnest.utils.EncryptedPrefsManager.isAiEnabled(context)
+                    val apiKey = com.billybobbain.wellnest.utils.EncryptedPrefsManager.getClaudeApiKey(context)
+
+                    if (!aiEnabled || apiKey.isNullOrBlank()) {
+                        errorMessage = "Please configure Claude API key in Settings"
+                        return@Button
+                    }
+
+                    processing = true
+                    errorMessage = null
+                    successMessage = null
+
+                    scope.launch {
+                        try {
+                            // Copy image to temp file
+                            val inputStream = context.contentResolver.openInputStream(selectedImageUri!!)
+                            val tempFile = java.io.File.createTempFile("med_import", ".jpg", context.cacheDir)
+                            tempFile.outputStream().use { output ->
+                                inputStream?.copyTo(output)
+                            }
+                            inputStream?.close()
+
+                            // Extract medications using Claude API
+                            val result = com.billybobbain.wellnest.utils.ClaudeApiService.extractMedicationsFromImage(tempFile, apiKey)
+
+                            tempFile.delete()
+
+                            result.fold(
+                                onSuccess = { jsonString ->
+                                    // Parse JSON and import
+                                    val parseResult = com.billybobbain.wellnest.utils.MedicationImporter.parseJson(jsonString, currentProfile!!.id)
+                                    parseResult.fold(
+                                        onSuccess = { medications ->
+                                            if (medications.isEmpty()) {
+                                                errorMessage = "No medications found in image"
+                                            } else {
+                                                medications.forEach { medication ->
+                                                    viewModel.addMedication(medication)
+                                                }
+                                                successMessage = "Successfully imported ${medications.size} medication(s)"
+                                                selectedImageUri = null
+                                            }
+                                        },
+                                        onFailure = { exception ->
+                                            errorMessage = "Parse error: ${exception.message}"
+                                        }
+                                    )
+                                },
+                                onFailure = { exception ->
+                                    errorMessage = "AI error: ${exception.message}"
+                                }
+                            )
+                        } catch (e: Exception) {
+                            errorMessage = "Error: ${e.message}"
+                        } finally {
+                            processing = false
+                        }
+                    }
+                },
+                enabled = selectedImageUri != null && !processing && currentProfile != null
+            ) {
+                Text("Extract & Import")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 /**
