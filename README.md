@@ -7,6 +7,11 @@ A comprehensive care management application for tracking health information, med
 ### Core Functionality
 - **Multiple Profiles**: Manage care information for multiple people
 - **Medications**: Track medications with dosage, frequency, prescribing doctor, pharmacy, and notes
+  - **Photo Import** (Optional): Import medications from photos using Claude vision API
+    - Take a photo of a medication list printout → AI extracts all medications
+    - Automatically populates drug names, dosages, frequencies, prescribing doctors, etc.
+    - ~$0.004 per photo (~less than a penny for a 3-page medication list)
+    - Requires Claude API key (see AI setup section below)
 - **Appointments**: Schedule appointments with date/time, location, and reminder notifications
 - **Staff Contacts**: Store contact information for facility staff and caregivers
 - **Health Profile**: Record vital health information including:
@@ -64,9 +69,15 @@ A comprehensive care management application for tracking health information, med
 - **State Management**: StateFlow for reactive UI updates
 - **Navigation**: Jetpack Compose Navigation
 
-## Setting Up AI Message Clarification (Optional)
+## Setting Up AI Features (Optional)
 
-The AI message clarification feature is completely optional but can be very helpful for understanding hard-to-read messages from loved ones with vision problems.
+Wellnest includes optional AI-powered features using Claude API. These are completely optional but can significantly streamline data entry and help understand hard-to-read messages.
+
+**AI Features:**
+- **Medication Photo Import**: Extract medication information from photos of medication lists
+- **Message Clarification**: Understand hard-to-read messages from loved ones with vision problems
+
+Both features use your own Claude API key for privacy and cost control.
 
 ### Getting a Free Claude API Key
 
@@ -80,12 +91,12 @@ The AI message clarification feature is completely optional but can be very help
 
 **Free Tier Details:**
 - New accounts receive **$5 in free credit**
-- Each message clarification costs approximately **$0.0002** (two-hundredths of a cent)
-- Your free credit provides approximately **25,000 message clarifications**
+- **Message clarification**: ~$0.0002 per message (25,000 messages with free credit)
+- **Medication photo import**: ~$0.004 per photo (1,250 medication lists with free credit)
 - No credit card required to get started
 - Credit expires after a few months, but you can add payment details if needed
 
-**Privacy:** Your API key is stored encrypted on your device using hardware-backed AES256-GCM encryption. Only the message text and your API key are sent to Claude API - no other personal information is transmitted.
+**Privacy:** Your API key is stored encrypted on your device using hardware-backed AES256-GCM encryption. When using AI features, only the relevant content (message text or medication photo) and your API key are sent to Claude API - no other personal information is transmitted.
 
 ## Building the Project
 
@@ -149,6 +160,11 @@ Quick access to all features from a clean, organized home screen.
 Track all medications with dosage, frequency, prescribing doctor, and pharmacy information.
 
 ![Medications List](screenshots/medications.png)
+
+### Medication Photo Import
+Import medications from photos using Claude vision API - automatically extracts all medication details.
+
+![Medication Import](screenshots/medicine-import.png)
 
 ### Appointments
 Keep track of upcoming appointments with date, time, location, and notes.
@@ -240,8 +256,8 @@ com.billybobbain.wellnest/
 │   └── theme/                # Theme, Color, Type definitions
 ├── utils/                    # Utility classes
 │   ├── ImageUtils.kt
-│   ├── MedicationImporter.kt
-│   ├── ClaudeApiService.kt   # AI message clarification service
+│   ├── MedicationImporter.kt # CSV and JSON medication import
+│   ├── ClaudeApiService.kt   # AI services (message clarification, photo import)
 │   └── EncryptedPrefsManager.kt  # Secure API key storage
 ├── MainActivity.kt
 ├── WellnestApp.kt           # Navigation setup
@@ -256,7 +272,7 @@ com.billybobbain.wellnest/
 - All phone numbers, addresses, and personal information are stored locally on device
 - No cloud sync or backup - all data is local only
 - Profile photos and insurance card images stored in app-private storage
-- **AI Clarification Privacy**: When enabled, only the message text and your API key are sent to Claude API. No other personal information is transmitted. Your API key is stored encrypted using hardware-backed AES256-GCM encryption.
+- **AI Features Privacy**: When using optional AI features (message clarification, medication photo import), only the relevant content and your API key are sent to Claude API. No other personal information is transmitted. Your API key is stored encrypted using hardware-backed AES256-GCM encryption.
 
 ## Icon
 
