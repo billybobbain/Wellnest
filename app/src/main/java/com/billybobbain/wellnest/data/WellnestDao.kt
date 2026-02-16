@@ -154,4 +154,52 @@ interface WellnestDao {
 
     @Delete
     suspend fun deleteMessage(message: Message)
+
+    // Doctor operations
+    @Query("SELECT * FROM doctors ORDER BY name ASC")
+    fun getAllDoctors(): Flow<List<Doctor>>
+
+    @Query("SELECT * FROM doctors WHERE id = :id")
+    suspend fun getDoctor(id: Long): Doctor?
+
+    @Query("SELECT * FROM doctors WHERE name = :name LIMIT 1")
+    suspend fun getDoctorByName(name: String): Doctor?
+
+    @Insert
+    suspend fun insertDoctor(doctor: Doctor): Long
+
+    @Update
+    suspend fun updateDoctor(doctor: Doctor)
+
+    @Delete
+    suspend fun deleteDoctor(doctor: Doctor)
+
+    // Location operations
+    @Query("SELECT * FROM locations ORDER BY distanceMiles ASC")
+    fun getAllLocations(): Flow<List<Location>>
+
+    @Query("SELECT * FROM locations WHERE id = :id")
+    suspend fun getLocation(id: Long): Location?
+
+    @Insert
+    suspend fun insertLocation(location: Location): Long
+
+    @Update
+    suspend fun updateLocation(location: Location)
+
+    @Delete
+    suspend fun deleteLocation(location: Location)
+
+    // DoctorLocation operations
+    @Insert
+    suspend fun insertDoctorLocation(doctorLocation: DoctorLocation)
+
+    @Query("DELETE FROM doctor_locations WHERE doctorId = :doctorId AND locationId = :locationId")
+    suspend fun deleteDoctorLocation(doctorId: Long, locationId: Long)
+
+    @Query("SELECT l.* FROM locations l INNER JOIN doctor_locations dl ON l.id = dl.locationId WHERE dl.doctorId = :doctorId ORDER BY l.distanceMiles ASC")
+    fun getLocationsForDoctor(doctorId: Long): Flow<List<Location>>
+
+    @Query("SELECT d.* FROM doctors d INNER JOIN doctor_locations dl ON d.id = dl.doctorId WHERE dl.locationId = :locationId ORDER BY d.name ASC")
+    fun getDoctorsForLocation(locationId: Long): Flow<List<Doctor>>
 }

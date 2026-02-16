@@ -36,6 +36,7 @@ fun MedicationsScreen(
     onEditMedication: (Long) -> Unit
 ) {
     val medications by viewModel.medications.collectAsState()
+    val doctors by viewModel.doctors.collectAsState()
     val currentProfile by viewModel.currentProfile.collectAsState()
     var showImportDialog by remember { mutableStateOf(false) }
     var showPhotoImportDialog by remember { mutableStateOf(false) }
@@ -127,6 +128,7 @@ fun MedicationsScreen(
                 items(medications) { medication ->
                     MedicationCard(
                         medication = medication,
+                        doctors = doctors,
                         onClick = { onEditMedication(medication.id) },
                         onDelete = { viewModel.deleteMedication(medication) }
                     )
@@ -161,6 +163,7 @@ fun ImportMedicationsDialog(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
     val currentProfile by viewModel.currentProfile.collectAsState()
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -227,25 +230,27 @@ fun ImportMedicationsDialog(
                         return@Button
                     }
 
-                    val result = MedicationImporter.parseCsv(csvText, currentProfile!!.id)
-                    result.fold(
-                        onSuccess = { medications ->
-                            if (medications.isEmpty()) {
-                                errorMessage = "No valid medications found in CSV"
-                            } else {
-                                // Import medications
-                                medications.forEach { medication ->
-                                    viewModel.addMedication(medication)
+                    scope.launch {
+                        val result = MedicationImporter.parseCsv(csvText, currentProfile!!.id, viewModel.repository)
+                        result.fold(
+                            onSuccess = { medications ->
+                                if (medications.isEmpty()) {
+                                    errorMessage = "No valid medications found in CSV"
+                                } else {
+                                    // Import medications
+                                    medications.forEach { medication ->
+                                        viewModel.addMedication(medication)
+                                    }
+                                    successMessage = "Successfully imported ${medications.size} medication(s)"
+                                    // Clear the text field
+                                    csvText = ""
                                 }
-                                successMessage = "Successfully imported ${medications.size} medication(s)"
-                                // Clear the text field
-                                csvText = ""
+                            },
+                            onFailure = { exception ->
+                                errorMessage = "Error: ${exception.message}"
                             }
-                        },
-                        onFailure = { exception ->
-                            errorMessage = "Error: ${exception.message}"
-                        }
-                    )
+                        )
+                    }
                 },
                 enabled = csvText.isNotBlank() && currentProfile != null
             ) {
@@ -264,6 +269,7 @@ fun ImportMedicationsDialog(
 @Composable
 fun MedicationCard(
     medication: Medication,
+    doctors: List<com.billybobbain.wellnest.data.Doctor>,
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -300,12 +306,16 @@ fun MedicationCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                if (!medication.prescribingDoctor.isNullOrEmpty()) {
-                    Text(
-                        text = "Dr. ${medication.prescribingDoctor}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                // Display doctor name if doctorId is set
+                medication.doctorId?.let { doctorId ->
+                    val doctor = doctors.find { it.id == doctorId }
+                    doctor?.let {
+                        Text(
+                            text = "Dr. ${it.name}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
             IconButton(onClick = onDelete) {
@@ -438,7 +448,7 @@ fun ImportFromPhotoDialog(
                             result.fold(
                                 onSuccess = { jsonString ->
                                     // Parse JSON and import
-                                    val parseResult = com.billybobbain.wellnest.utils.MedicationImporter.parseJson(jsonString, currentProfile!!.id)
+                                    val parseResult = com.billybobbain.wellnest.utils.MedicationImporter.parseJson(jsonString, currentProfile!!.id, viewModel.repository)
                                     parseResult.fold(
                                         onSuccess = { medications ->
                                             if (medications.isEmpty()) {

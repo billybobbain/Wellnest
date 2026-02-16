@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -12,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.billybobbain.wellnest.WellnestViewModel
+import com.billybobbain.wellnest.data.Doctor
 import com.billybobbain.wellnest.data.Medication
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -22,13 +24,14 @@ fun AddEditMedicationScreen(
     onNavigateBack: () -> Unit
 ) {
     val medications by viewModel.medications.collectAsState()
+    val doctors by viewModel.doctors.collectAsState()
     val selectedProfileId by viewModel.selectedProfileId.collectAsState()
     val existingMedication = medications.find { it.id == medicationId }
 
     var drugName by remember { mutableStateOf(existingMedication?.drugName ?: "") }
     var dosage by remember { mutableStateOf(existingMedication?.dosage ?: "") }
     var frequency by remember { mutableStateOf(existingMedication?.frequency ?: "") }
-    var prescribingDoctor by remember { mutableStateOf(existingMedication?.prescribingDoctor ?: "") }
+    var selectedDoctorId by remember { mutableStateOf(existingMedication?.doctorId) }
     var pharmacy by remember { mutableStateOf(existingMedication?.pharmacy ?: "") }
     var notes by remember { mutableStateOf(existingMedication?.notes ?: "") }
     var classification by remember { mutableStateOf(existingMedication?.classification ?: "") }
@@ -36,6 +39,8 @@ fun AddEditMedicationScreen(
 
     var classificationExpanded by remember { mutableStateOf(false) }
     var diagnosisExpanded by remember { mutableStateOf(false) }
+    var showDoctorDialog by remember { mutableStateOf(false) }
+    var newDoctorName by remember { mutableStateOf("") }
 
     val classificationOptions = listOf(
         "Antianxiety",
@@ -101,13 +106,45 @@ fun AddEditMedicationScreen(
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
 
-            OutlinedTextField(
-                value = prescribingDoctor,
-                onValueChange = { prescribingDoctor = it },
-                label = { Text("Prescribing Doctor") },
+            // Doctor selection
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
-            )
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Text("Prescribing Doctor", style = MaterialTheme.typography.titleSmall)
+                IconButton(onClick = { showDoctorDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Doctor")
+                }
+            }
+
+            if (doctors.isEmpty()) {
+                Text("No doctors yet. Add one using the + button above.")
+            } else {
+                doctors.forEach { doctor ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = selectedDoctorId == doctor.id,
+                            onClick = { selectedDoctorId = doctor.id }
+                        )
+                        Text(
+                            text = doctor.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+            }
+
+            // Option to deselect doctor
+            if (selectedDoctorId != null) {
+                TextButton(onClick = { selectedDoctorId = null }) {
+                    Text("Clear Doctor")
+                }
+            }
 
             OutlinedTextField(
                 value = pharmacy,
@@ -200,7 +237,7 @@ fun AddEditMedicationScreen(
                                         drugName = drugName.trim(),
                                         dosage = dosage.trim().takeIf { it.isNotEmpty() },
                                         frequency = frequency.trim().takeIf { it.isNotEmpty() },
-                                        prescribingDoctor = prescribingDoctor.trim().takeIf { it.isNotEmpty() },
+                                        doctorId = selectedDoctorId,
                                         pharmacy = pharmacy.trim().takeIf { it.isNotEmpty() },
                                         notes = notes.trim().takeIf { it.isNotEmpty() },
                                         classification = classification.trim().takeIf { it.isNotEmpty() },
@@ -214,7 +251,7 @@ fun AddEditMedicationScreen(
                                         drugName = drugName.trim(),
                                         dosage = dosage.trim().takeIf { it.isNotEmpty() },
                                         frequency = frequency.trim().takeIf { it.isNotEmpty() },
-                                        prescribingDoctor = prescribingDoctor.trim().takeIf { it.isNotEmpty() },
+                                        doctorId = selectedDoctorId,
                                         pharmacy = pharmacy.trim().takeIf { it.isNotEmpty() },
                                         notes = notes.trim().takeIf { it.isNotEmpty() },
                                         classification = classification.trim().takeIf { it.isNotEmpty() },
@@ -232,5 +269,41 @@ fun AddEditMedicationScreen(
                 Text("Save")
             }
         }
+    }
+
+    // Dialog to add new doctor
+    if (showDoctorDialog) {
+        AlertDialog(
+            onDismissRequest = { showDoctorDialog = false },
+            title = { Text("Add Doctor") },
+            text = {
+                OutlinedTextField(
+                    value = newDoctorName,
+                    onValueChange = { newDoctorName = it },
+                    label = { Text("Doctor Name") },
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newDoctorName.isNotBlank()) {
+                            viewModel.addDoctor(
+                                Doctor(name = newDoctorName.trim())
+                            )
+                            newDoctorName = ""
+                            showDoctorDialog = false
+                        }
+                    }
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDoctorDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

@@ -40,6 +40,16 @@ sealed class Screen(val route: String) {
         fun createRoute(messageId: Long? = null) =
             "add_edit_message/${messageId ?: "new"}"
     }
+    object Locations : Screen("locations")
+    object AddEditLocation : Screen("add_edit_location/{locationId}") {
+        fun createRoute(locationId: Long? = null) =
+            "add_edit_location/${locationId ?: "new"}"
+    }
+    object Doctors : Screen("doctors")
+    object AddEditDoctor : Screen("add_edit_doctor/{doctorId}") {
+        fun createRoute(doctorId: Long? = null) =
+            "add_edit_doctor/${doctorId ?: "new"}"
+    }
     object Settings : Screen("settings")
     object AddEditProfile : Screen("add_edit_profile/{profileId}") {
         fun createRoute(profileId: Long? = null) =

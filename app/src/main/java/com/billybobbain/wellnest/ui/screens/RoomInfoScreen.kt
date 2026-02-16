@@ -9,9 +9,12 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.billybobbain.wellnest.WellnestViewModel
+import com.billybobbain.wellnest.utils.LocationUtils
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,6 +23,8 @@ fun RoomInfoScreen(
     onNavigateBack: () -> Unit
 ) {
     val currentProfile by viewModel.currentProfile.collectAsState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     var roomLength by remember { mutableStateOf("") }
     var roomWidth by remember { mutableStateOf("") }
@@ -27,6 +32,10 @@ fun RoomInfoScreen(
     var windowWidth by remember { mutableStateOf("") }
     var windowHeight by remember { mutableStateOf("") }
     var roomNotes by remember { mutableStateOf("") }
+    var homeAddress by remember { mutableStateOf("") }
+    var homeLatitude by remember { mutableStateOf<Double?>(null) }
+    var homeLongitude by remember { mutableStateOf<Double?>(null) }
+    var geocoding by remember { mutableStateOf(false) }
 
     // Load current profile's room data
     LaunchedEffect(currentProfile) {
@@ -37,6 +46,9 @@ fun RoomInfoScreen(
             windowWidth = profile.windowWidth ?: ""
             windowHeight = profile.windowHeight ?: ""
             roomNotes = profile.roomNotes ?: ""
+            homeAddress = profile.homeAddress ?: ""
+            homeLatitude = profile.homeLatitude
+            homeLongitude = profile.homeLongitude
         }
     }
 
@@ -142,6 +154,56 @@ fun RoomInfoScreen(
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
 
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            Text(
+                text = "Home Address (for distance calculations)",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            OutlinedTextField(
+                value = homeAddress,
+                onValueChange = { homeAddress = it },
+                label = { Text("Address") },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("123 Main St, Plano, TX 75024") },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                trailingIcon = {
+                    if (geocoding) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    }
+                }
+            )
+
+            if (homeLatitude != null && homeLongitude != null) {
+                Text(
+                    text = "Coordinates: ${String.format("%.4f", homeLatitude)}, ${String.format("%.4f", homeLongitude)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Button(
+                onClick = {
+                    if (homeAddress.isNotBlank()) {
+                        geocoding = true
+                        scope.launch {
+                            val coords = LocationUtils.geocodeAddress(context, homeAddress)
+                            if (coords != null) {
+                                homeLatitude = coords.first
+                                homeLongitude = coords.second
+                            }
+                            geocoding = false
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = homeAddress.isNotBlank() && !geocoding
+            ) {
+                Text(if (geocoding) "Geocoding..." else "Get Coordinates from Address")
+            }
+
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
@@ -154,7 +216,10 @@ fun RoomInfoScreen(
                                 roomHeight = roomHeight.trim().takeIf { it.isNotEmpty() },
                                 windowWidth = windowWidth.trim().takeIf { it.isNotEmpty() },
                                 windowHeight = windowHeight.trim().takeIf { it.isNotEmpty() },
-                                roomNotes = roomNotes.trim().takeIf { it.isNotEmpty() }
+                                roomNotes = roomNotes.trim().takeIf { it.isNotEmpty() },
+                                homeAddress = homeAddress.trim().takeIf { it.isNotEmpty() },
+                                homeLatitude = homeLatitude,
+                                homeLongitude = homeLongitude
                             )
                         )
                     }

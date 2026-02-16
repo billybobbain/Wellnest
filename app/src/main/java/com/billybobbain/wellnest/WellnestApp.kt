@@ -66,10 +66,11 @@ fun WellnestApp(viewModel: WellnestViewModel) {
                 viewModel = viewModel,
                 onNavigateToMedications = { navController.navigate(Screen.Medications.route) },
                 onNavigateToAppointments = { navController.navigate(Screen.Appointments.route) },
+                onNavigateToLocations = { navController.navigate(Screen.Locations.route) },
                 onNavigateToContacts = { navController.navigate(Screen.Contacts.route) },
                 onNavigateToHealthProfile = { navController.navigate(Screen.HealthProfile.route) },
                 onNavigateToInsurance = { navController.navigate(Screen.Insurance.route) },
-                onNavigateToSecurityCodes = { navController.navigate(Screen.SecurityCodes.route) },
+                onNavigateToDoctors = { navController.navigate(Screen.Doctors.route) },
                 onNavigateToRoomInfo = { navController.navigate(Screen.RoomInfo.route) },
                 onNavigateToSupplies = { navController.navigate(Screen.Supplies.route) },
                 onNavigateToMessages = { navController.navigate(Screen.Messages.route) },
@@ -251,6 +252,52 @@ fun WellnestApp(viewModel: WellnestViewModel) {
             AddEditMessageScreen(
                 viewModel = viewModel,
                 messageId = messageId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Locations.route) {
+            LocationsScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onAddLocation = { navController.navigate(Screen.AddEditLocation.createRoute()) },
+                onEditLocation = { id -> navController.navigate(Screen.AddEditLocation.createRoute(id)) }
+            )
+        }
+
+        composable(
+            route = Screen.AddEditLocation.route,
+            arguments = listOf(navArgument("locationId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val locationIdArg = backStackEntry.arguments?.getString("locationId")
+            val locationId = if (locationIdArg == "new") null else locationIdArg?.toLongOrNull()
+
+            AddEditLocationScreen(
+                viewModel = viewModel,
+                locationId = locationId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Doctors.route) {
+            DoctorsScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onAddDoctor = { navController.navigate(Screen.AddEditDoctor.createRoute()) },
+                onEditDoctor = { id -> navController.navigate(Screen.AddEditDoctor.createRoute(id)) }
+            )
+        }
+
+        composable(
+            route = Screen.AddEditDoctor.route,
+            arguments = listOf(navArgument("doctorId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val doctorIdArg = backStackEntry.arguments?.getString("doctorId")
+            val doctorId = if (doctorIdArg == "new") null else doctorIdArg?.toLongOrNull()
+
+            AddEditDoctorScreen(
+                viewModel = viewModel,
+                doctorId = doctorId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

@@ -1,6 +1,7 @@
 package com.billybobbain.wellnest.utils
 
 import com.billybobbain.wellnest.data.Medication
+import com.billybobbain.wellnest.data.WellnestRepository
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
@@ -26,7 +27,7 @@ object MedicationImporter {
     /**
      * Parse JSON from vision API and return list of medications
      */
-    fun parseJson(jsonContent: String, profileId: Long): Result<List<Medication>> {
+    suspend fun parseJson(jsonContent: String, profileId: Long, repository: WellnestRepository): Result<List<Medication>> {
         return try {
             val cleanedJson = jsonContent.trim()
                 .removePrefix("```json")
@@ -37,12 +38,17 @@ object MedicationImporter {
             val medicationJsonList = json.decodeFromString<List<MedicationJson>>(cleanedJson)
 
             val medications = medicationJsonList.map { medJson ->
+                // Get or create doctor if prescribingDoctor is present
+                val doctorId = medJson.prescribingDoctor?.takeIf { it.isNotBlank() }?.let { doctorName ->
+                    repository.getDoctorByNameOrCreate(doctorName)
+                }
+
                 Medication(
                     profileId = profileId,
                     drugName = medJson.drugName,
                     dosage = medJson.dosage?.takeIf { it.isNotBlank() },
                     frequency = medJson.frequency?.takeIf { it.isNotBlank() },
-                    prescribingDoctor = medJson.prescribingDoctor?.takeIf { it.isNotBlank() },
+                    doctorId = doctorId,
                     pharmacy = null,
                     startDate = null,
                     refillDate = null,
@@ -63,7 +69,7 @@ object MedicationImporter {
      * Expected CSV format:
      * Medication,Strength,Type,Route,Frequency,Instruction,Indication,Schedule,Prescriber,Date
      */
-    fun parseCsv(csvContent: String, profileId: Long): Result<List<Medication>> {
+    suspend fun parseCsv(csvContent: String, profileId: Long, repository: WellnestRepository): Result<List<Medication>> {
         return try {
             val lines = csvContent.trim().lines()
             if (lines.isEmpty()) {
@@ -74,7 +80,7 @@ object MedicationImporter {
             val dataLines = lines.drop(1).filter { it.isNotBlank() }
 
             val medications = dataLines.mapNotNull { line ->
-                parseCsvLine(line, profileId)
+                parseCsvLine(line, profileId, repository)
             }
 
             Result.success(medications)
@@ -83,7 +89,7 @@ object MedicationImporter {
         }
     }
 
-    private fun parseCsvLine(line: String, profileId: Long): Medication? {
+    private suspend fun parseCsvLine(line: String, profileId: Long, repository: WellnestRepository): Medication? {
         return try {
             // Parse CSV properly handling quoted fields
             val parts = parseCsvFields(line)
@@ -130,12 +136,17 @@ object MedicationImporter {
                 }
             }.takeIf { it.isNotBlank() }
 
+            // Get or create doctor if prescriber is present
+            val doctorId = prescriber.takeIf { it.isNotBlank() }?.let { doctorName ->
+                repository.getDoctorByNameOrCreate(doctorName)
+            }
+
             Medication(
                 profileId = profileId,
                 drugName = medication,
                 dosage = dosage.takeIf { it.isNotBlank() },
                 frequency = frequency.takeIf { it.isNotBlank() },
-                prescribingDoctor = prescriber.takeIf { it.isNotBlank() },
+                doctorId = doctorId,
                 pharmacy = null, // Not in CSV
                 startDate = startDate,
                 refillDate = null, // Not in CSV

@@ -13,9 +13,15 @@ import androidx.room.PrimaryKey
             parentColumns = ["id"],
             childColumns = ["profileId"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Doctor::class,
+            parentColumns = ["id"],
+            childColumns = ["doctorId"],
+            onDelete = ForeignKey.SET_NULL
         )
     ],
-    indices = [Index("profileId")]
+    indices = [Index("profileId"), Index("doctorId")]
 )
 data class Medication(
     @PrimaryKey(autoGenerate = true)
@@ -24,7 +30,7 @@ data class Medication(
     val drugName: String,
     val dosage: String? = null,
     val frequency: String? = null,
-    val prescribingDoctor: String? = null,
+    val doctorId: Long? = null,
     val pharmacy: String? = null,
     val startDate: Long? = null,
     val refillDate: Long? = null,

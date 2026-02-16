@@ -37,6 +37,29 @@ object TestDataGenerator {
             )
         )
 
+        // Create doctors
+        val elrondId = profileDao.insertDoctor(
+            Doctor(
+                name = "Dr. Elrond",
+                specialty = "Elvish Medicine",
+                phone = "(555) RIVENDELL"
+            )
+        )
+        val gandalfId = profileDao.insertDoctor(
+            Doctor(
+                name = "Dr. Gandalf Grey",
+                specialty = "Geriatric Care",
+                phone = "(555) WIZARD"
+            )
+        )
+        val gimliId = profileDao.insertDoctor(
+            Doctor(
+                name = "Dr. Gimli",
+                specialty = "Orthopedics",
+                phone = "(555) DWARF"
+            )
+        )
+
         // Medications
         val medications = listOf(
             Medication(
@@ -44,7 +67,7 @@ object TestDataGenerator {
                 drugName = "Lembas Bread Vitamins",
                 dosage = "One small piece",
                 frequency = "Daily with elevenses",
-                prescribingDoctor = "Dr. Elrond",
+                doctorId = elrondId,
                 pharmacy = "Rivendell Apothecary",
                 notes = "Elvish recipe. Very sustaining.",
                 classification = "Supplement"
@@ -54,7 +77,7 @@ object TestDataGenerator {
                 drugName = "Old Toby's Respiratory Support",
                 dosage = "As needed",
                 frequency = "After dinner",
-                prescribingDoctor = "Dr. Gandalf Grey",
+                doctorId = gandalfId,
                 pharmacy = "The Shire Pharmacy",
                 notes = "For pipe smokers. The finest pipe-weed in the South Farthing.",
                 classification = "Respiratory"
@@ -64,7 +87,7 @@ object TestDataGenerator {
                 drugName = "Mithril Joint Support",
                 dosage = "1 tablet",
                 frequency = "Twice daily",
-                prescribingDoctor = "Dr. Gimli",
+                doctorId = gimliId,
                 pharmacy = "Lonely Mountain Pharmacy",
                 notes = "Dwarven formula. Keeps joints strong for long journeys.",
                 classification = "Anti-inflammatory"
@@ -74,7 +97,7 @@ object TestDataGenerator {
                 drugName = "Lisinopril",
                 dosage = "10mg",
                 frequency = "Once daily",
-                prescribingDoctor = "Dr. Gandalf Grey",
+                doctorId = gandalfId,
                 pharmacy = "Rivendell Apothecary",
                 notes = "For blood pressure",
                 classification = "Cardiovascular"
@@ -84,7 +107,7 @@ object TestDataGenerator {
                 drugName = "Metformin",
                 dosage = "500mg",
                 frequency = "Twice daily with meals",
-                prescribingDoctor = "Dr. Gandalf Grey",
+                doctorId = gandalfId,
                 pharmacy = "Rivendell Apothecary",
                 notes = "With breakfast and dinner",
                 classification = "Diabetes"

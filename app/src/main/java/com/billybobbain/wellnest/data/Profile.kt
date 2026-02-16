@@ -18,5 +18,10 @@ data class Profile(
     val roomHeight: String? = null,
     val windowWidth: String? = null,
     val windowHeight: String? = null,
-    val roomNotes: String? = null
+    val roomNotes: String? = null,
+
+    // Home address (for distance calculations)
+    val homeAddress: String? = null,
+    val homeLatitude: Double? = null,
+    val homeLongitude: Double? = null
 )

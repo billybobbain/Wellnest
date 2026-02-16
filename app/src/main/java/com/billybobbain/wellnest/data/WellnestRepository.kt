@@ -122,4 +122,64 @@ class WellnestRepository(private val dao: WellnestDao) {
     suspend fun updateMessage(message: Message) = dao.updateMessage(message)
 
     suspend fun deleteMessage(message: Message) = dao.deleteMessage(message)
+
+    // Doctor operations
+    val allDoctors: Flow<List<Doctor>> = dao.getAllDoctors()
+
+    suspend fun getDoctor(id: Long): Doctor? = dao.getDoctor(id)
+
+    suspend fun getDoctorByName(name: String): Doctor? = dao.getDoctorByName(name)
+
+    suspend fun insertDoctor(doctor: Doctor): Long = dao.insertDoctor(doctor)
+
+    suspend fun updateDoctor(doctor: Doctor) = dao.updateDoctor(doctor)
+
+    suspend fun deleteDoctor(doctor: Doctor) = dao.deleteDoctor(doctor)
+
+    /**
+     * Helper function for medication import: Get existing doctor by name or create new one.
+     * Returns the doctor ID.
+     */
+    suspend fun getDoctorByNameOrCreate(name: String): Long {
+        val trimmedName = name.trim()
+        if (trimmedName.isEmpty()) {
+            throw IllegalArgumentException("Doctor name cannot be empty")
+        }
+
+        // Check if doctor already exists
+        val existing = dao.getDoctorByName(trimmedName)
+        if (existing != null) {
+            return existing.id
+        }
+
+        // Create new doctor with just the name
+        val newDoctor = Doctor(name = trimmedName)
+        return dao.insertDoctor(newDoctor)
+    }
+
+    // Location operations
+    val allLocations: Flow<List<Location>> = dao.getAllLocations()
+
+    suspend fun getLocation(id: Long): Location? = dao.getLocation(id)
+
+    suspend fun insertLocation(location: Location): Long = dao.insertLocation(location)
+
+    suspend fun updateLocation(location: Location) = dao.updateLocation(location)
+
+    suspend fun deleteLocation(location: Location) = dao.deleteLocation(location)
+
+    // DoctorLocation operations
+    suspend fun linkDoctorToLocation(doctorId: Long, locationId: Long) {
+        dao.insertDoctorLocation(DoctorLocation(doctorId = doctorId, locationId = locationId))
+    }
+
+    suspend fun unlinkDoctorFromLocation(doctorId: Long, locationId: Long) {
+        dao.deleteDoctorLocation(doctorId, locationId)
+    }
+
+    fun getLocationsForDoctor(doctorId: Long): Flow<List<Location>> =
+        dao.getLocationsForDoctor(doctorId)
+
+    fun getDoctorsForLocation(locationId: Long): Flow<List<Doctor>> =
+        dao.getDoctorsForLocation(locationId)
 }

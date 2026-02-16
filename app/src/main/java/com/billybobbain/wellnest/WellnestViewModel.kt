@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class WellnestViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository: WellnestRepository
+    internal val repository: WellnestRepository
     private val dao: WellnestDao
 
     // Current selected profile
@@ -32,6 +32,12 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
 
     // Insurance providers
     val insuranceProviders: StateFlow<List<InsuranceProvider>>
+
+    // Doctors
+    val doctors: StateFlow<List<Doctor>>
+
+    // Locations
+    val locations: StateFlow<List<Location>>
 
     // Settings
     val settings: StateFlow<Settings?>
@@ -172,6 +178,18 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
         )
 
         insuranceProviders = repository.allInsuranceProviders.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+        doctors = repository.allDoctors.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+        locations = repository.allLocations.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
@@ -386,6 +404,50 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
     fun deleteMessage(message: Message) {
         viewModelScope.launch {
             repository.deleteMessage(message)
+        }
+    }
+
+    // Doctor operations
+    fun addDoctor(doctor: Doctor) {
+        viewModelScope.launch {
+            repository.insertDoctor(doctor)
+        }
+    }
+
+    fun updateDoctor(doctor: Doctor) {
+        viewModelScope.launch {
+            repository.updateDoctor(doctor)
+        }
+    }
+
+    fun deleteDoctor(doctor: Doctor) {
+        viewModelScope.launch {
+            repository.deleteDoctor(doctor)
+        }
+    }
+
+    // Location operations
+    fun addLocation(location: Location) {
+        viewModelScope.launch {
+            repository.insertLocation(location)
+        }
+    }
+
+    fun updateLocation(location: Location) {
+        viewModelScope.launch {
+            repository.updateLocation(location)
+        }
+    }
+
+    fun deleteLocation(location: Location) {
+        viewModelScope.launch {
+            repository.deleteLocation(location)
+        }
+    }
+
+    fun linkDoctorToLocation(doctorId: Long, locationId: Long) {
+        viewModelScope.launch {
+            repository.linkDoctorToLocation(doctorId, locationId)
         }
     }
 

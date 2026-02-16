@@ -13,9 +13,21 @@ import androidx.room.PrimaryKey
             parentColumns = ["id"],
             childColumns = ["profileId"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Doctor::class,
+            parentColumns = ["id"],
+            childColumns = ["doctorId"],
+            onDelete = ForeignKey.SET_NULL
+        ),
+        ForeignKey(
+            entity = Location::class,
+            parentColumns = ["id"],
+            childColumns = ["locationId"],
+            onDelete = ForeignKey.SET_NULL
         )
     ],
-    indices = [Index("profileId")]
+    indices = [Index("profileId"), Index("doctorId"), Index("locationId")]
 )
 data class Appointment(
     @PrimaryKey(autoGenerate = true)
@@ -23,8 +35,13 @@ data class Appointment(
     val profileId: Long,
     val title: String,
     val dateTime: Long,
-    val location: String? = null,
+    val location: String? = null,  // Keep for backward compatibility, will deprecate later
+    val doctorId: Long? = null,
+    val locationId: Long? = null,  // New: link to Location entity
     val notes: String? = null,
     val reminderEnabled: Boolean = false,
-    val reminderMinutesBefore: Int = 60
+    val reminderMinutesBefore: Int = 60,
+    val isArchived: Boolean = false,  // New: soft delete
+    val milesDriven: Double? = null,  // New: actual miles driven (for mileage tracking)
+    val wasAttended: Boolean = true   // New: did you actually attend? (defaults to true)
 )

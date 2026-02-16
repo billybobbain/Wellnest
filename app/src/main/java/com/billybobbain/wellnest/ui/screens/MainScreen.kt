@@ -27,10 +27,11 @@ fun MainScreen(
     viewModel: WellnestViewModel,
     onNavigateToMedications: () -> Unit,
     onNavigateToAppointments: () -> Unit,
+    onNavigateToLocations: () -> Unit,
     onNavigateToContacts: () -> Unit,
     onNavigateToHealthProfile: () -> Unit,
     onNavigateToInsurance: () -> Unit,
-    onNavigateToSecurityCodes: () -> Unit,
+    onNavigateToDoctors: () -> Unit,
     onNavigateToRoomInfo: () -> Unit,
     onNavigateToSupplies: () -> Unit,
     onNavigateToMessages: () -> Unit,
@@ -105,6 +106,13 @@ fun MainScreen(
             }
             item {
                 MenuCard(
+                    title = "Locations",
+                    icon = Icons.Default.LocationOn,
+                    onClick = onNavigateToLocations
+                )
+            }
+            item {
+                MenuCard(
                     title = "Contacts",
                     icon = Icons.Default.Phone,
                     onClick = onNavigateToContacts
@@ -126,9 +134,9 @@ fun MainScreen(
             }
             item {
                 MenuCard(
-                    title = "Security Codes",
-                    icon = Icons.Default.Lock,
-                    onClick = onNavigateToSecurityCodes
+                    title = "Doctors",
+                    icon = Icons.Default.Person,
+                    onClick = onNavigateToDoctors
                 )
             }
             item {
