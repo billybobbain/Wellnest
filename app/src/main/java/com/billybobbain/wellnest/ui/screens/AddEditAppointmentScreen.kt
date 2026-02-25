@@ -14,15 +14,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.billybobbain.wellnest.WellnestViewModel
 import com.billybobbain.wellnest.data.Appointment
 import com.billybobbain.wellnest.data.Doctor
 import com.billybobbain.wellnest.data.Location
+import com.billybobbain.wellnest.data.RecurringAppointment
 import com.billybobbain.wellnest.utils.LocationUtils
+import com.billybobbain.wellnest.utils.RecurringAppointmentExpander
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.LocalTime
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,22 +37,68 @@ fun AddEditAppointmentScreen(
     onNavigateBack: () -> Unit
 ) {
     val appointments by viewModel.appointments.collectAsState()
+    val recurringAppointments by viewModel.recurringAppointments.collectAsState()
     val doctors by viewModel.doctors.collectAsState()
     val locations by viewModel.locations.collectAsState()
     val currentProfile by viewModel.currentProfile.collectAsState()
     val selectedProfileId by viewModel.selectedProfileId.collectAsState()
-    val existingAppointment = appointments.find { it.id == appointmentId }
+
+    // Check if this is editing a recurring appointment
+    // Could be: 1) Virtual instance (negative ID), 2) Direct recurring appointment (positive ID from recurring list)
+    val isVirtualInstance = appointmentId != null && RecurringAppointmentExpander.isVirtualInstance(appointmentId)
+    val recurringId = if (isVirtualInstance) {
+        RecurringAppointmentExpander.getRecurringIdFromVirtual(appointmentId!!)
+    } else {
+        appointmentId  // Might be a direct recurring appointment ID
+    }
+
+    // Try to find existing recurring appointment
+    val existingRecurring = recurringAppointments.find { it.id == recurringId }
+
+    // Only look for regular appointment if it's not a recurring one
+    val existingAppointment = if (existingRecurring == null && !isVirtualInstance) {
+        appointments.find { it.id == appointmentId }
+    } else {
+        null
+    }
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var title by remember { mutableStateOf(existingAppointment?.title ?: "") }
-    var location by remember { mutableStateOf(existingAppointment?.location ?: "") }
-    var selectedDoctorId by remember { mutableStateOf(existingAppointment?.doctorId) }
-    var selectedLocationId by remember { mutableStateOf(existingAppointment?.locationId) }
-    var notes by remember { mutableStateOf(existingAppointment?.notes ?: "") }
-    var dateTime by remember { mutableStateOf(existingAppointment?.dateTime ?: System.currentTimeMillis()) }
-    var reminderEnabled by remember { mutableStateOf(existingAppointment?.reminderEnabled ?: false) }
-    var reminderMinutes by remember { mutableStateOf(existingAppointment?.reminderMinutesBefore?.toString() ?: "60") }
+    var title by remember { mutableStateOf(existingRecurring?.title ?: existingAppointment?.title ?: "") }
+    var selectedDoctorId by remember { mutableStateOf(existingRecurring?.doctorId ?: existingAppointment?.doctorId) }
+    var selectedLocationId by remember { mutableStateOf(existingRecurring?.locationId ?: existingAppointment?.locationId) }
+    var notes by remember { mutableStateOf(existingRecurring?.notes ?: existingAppointment?.notes ?: "") }
+    var dateTime by remember {
+        mutableStateOf(
+            when {
+                existingAppointment != null -> existingAppointment.dateTime
+                existingRecurring != null -> {
+                    // Convert timeOfDay (milliseconds since midnight) to a full dateTime
+                    val cal = Calendar.getInstance()
+                    val hours = (existingRecurring.timeOfDay / 3_600_000).toInt()
+                    val minutes = ((existingRecurring.timeOfDay % 3_600_000) / 60_000).toInt()
+                    cal.set(Calendar.HOUR_OF_DAY, hours)
+                    cal.set(Calendar.MINUTE, minutes)
+                    cal.set(Calendar.SECOND, 0)
+                    cal.set(Calendar.MILLISECOND, 0)
+                    cal.timeInMillis
+                }
+                else -> System.currentTimeMillis()
+            }
+        )
+    }
+    var reminderEnabled by remember { mutableStateOf(existingRecurring?.reminderEnabled ?: existingAppointment?.reminderEnabled ?: false) }
+    var reminderMinutes by remember { mutableStateOf((existingRecurring?.reminderMinutesBefore ?: existingAppointment?.reminderMinutesBefore ?: 60).toString()) }
+    var selectedIcon by remember { mutableStateOf(existingRecurring?.icon ?: existingAppointment?.icon ?: "📋") }
+
+    // Recurring appointment state
+    var isRecurring by remember { mutableStateOf(existingRecurring != null) }
+    var selectedDays by remember {
+        mutableStateOf(
+            existingRecurring?.daysOfWeek?.split(",")?.mapNotNull { it.toIntOrNull() }?.toSet() ?: emptySet()
+        )
+    }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
@@ -59,11 +109,14 @@ fun AddEditAppointmentScreen(
     var newLocationAddress by remember { mutableStateOf("") }
     var newLocationPhone by remember { mutableStateOf("") }
     var geocodingNewLocation by remember { mutableStateOf(false) }
+    var showIconPicker by remember { mutableStateOf(false) }
 
     // Track locations for selected doctor
+    // Use the main locations list as a key so it refreshes when locations are added
     val doctorLocations by produceState<List<Location>>(
         initialValue = emptyList(),
-        key1 = selectedDoctorId
+        key1 = selectedDoctorId,
+        key2 = locations.size  // Refresh when locations are added/removed
     ) {
         value = if (selectedDoctorId != null) {
             viewModel.repository.getLocationsForDoctor(selectedDoctorId!!).first()
@@ -73,10 +126,13 @@ fun AddEditAppointmentScreen(
     }
 
     // Clear location selection if it's not valid for the newly selected doctor
+    // BUT: Only do this when creating new appointments, not when editing existing ones
     LaunchedEffect(selectedDoctorId, doctorLocations) {
-        if (selectedDoctorId != null && selectedLocationId != null) {
-            if (!doctorLocations.any { it.id == selectedLocationId }) {
-                selectedLocationId = null
+        if (appointmentId == null) {  // Only for new appointments
+            if (selectedDoctorId != null && selectedLocationId != null) {
+                if (!doctorLocations.any { it.id == selectedLocationId }) {
+                    selectedLocationId = null
+                }
             }
         }
     }
@@ -113,6 +169,23 @@ fun AddEditAppointmentScreen(
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
 
+            // Icon picker
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Icon", style = MaterialTheme.typography.titleSmall)
+                OutlinedButton(
+                    onClick = { showIconPicker = true }
+                ) {
+                    Text(
+                        text = selectedIcon,
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                }
+            }
+
             Text("Date & Time", style = MaterialTheme.typography.titleSmall)
 
             Row(
@@ -121,11 +194,12 @@ fun AddEditAppointmentScreen(
             ) {
                 OutlinedButton(
                     onClick = { showDatePicker = true },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    enabled = !isRecurring  // Disable date picker for recurring appointments
                 ) {
                     Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
                         Text("Date", style = MaterialTheme.typography.labelSmall)
-                        Text(dateFormat.format(Date(dateTime)))
+                        Text(if (isRecurring) "---" else dateFormat.format(Date(dateTime)))
                     }
                 }
 
@@ -140,13 +214,50 @@ fun AddEditAppointmentScreen(
                 }
             }
 
-            OutlinedTextField(
-                value = location,
-                onValueChange = { location = it },
-                label = { Text("Location") },
+            // Recurring toggle
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
-            )
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Repeats Weekly", style = MaterialTheme.typography.titleSmall)
+                Switch(
+                    checked = isRecurring,
+                    onCheckedChange = { isRecurring = it },
+                    enabled = existingAppointment == null && existingRecurring == null  // Can only toggle when creating new
+                )
+            }
+
+            // Day selector for recurring appointments
+            if (isRecurring) {
+                Text("Repeat On", style = MaterialTheme.typography.labelMedium)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa").forEachIndexed { index, day ->
+                        val dayValue = index + 1  // 1=Sunday, 7=Saturday
+                        FilterChip(
+                            selected = dayValue in selectedDays,
+                            onClick = {
+                                selectedDays = if (dayValue in selectedDays) {
+                                    selectedDays - dayValue
+                                } else {
+                                    selectedDays + dayValue
+                                }
+                            },
+                            label = { Text(day, style = MaterialTheme.typography.bodySmall) }
+                        )
+                    }
+                }
+                if (selectedDays.isEmpty()) {
+                    Text(
+                        "Select at least one day",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
 
             // Doctor selection
             Row(
@@ -306,40 +417,92 @@ fun AddEditAppointmentScreen(
                     selectedProfileId?.let { profileId ->
                         if (title.isNotBlank()) {
                             val reminderMin = reminderMinutes.toIntOrNull() ?: 60
-                            if (existingAppointment != null) {
-                                viewModel.updateAppointment(
-                                    existingAppointment.copy(
-                                        title = title.trim(),
-                                        dateTime = dateTime,
-                                        location = location.trim().takeIf { it.isNotEmpty() },
-                                        doctorId = selectedDoctorId,
-                                        locationId = selectedLocationId,
-                                        notes = notes.trim().takeIf { it.isNotEmpty() },
-                                        reminderEnabled = reminderEnabled,
-                                        reminderMinutesBefore = reminderMin
-                                    )
-                                )
+
+                            if (isRecurring) {
+                                // Save as recurring appointment
+                                if (selectedDays.isNotEmpty()) {
+                                    // Calculate time of day in milliseconds since midnight
+                                    val cal = Calendar.getInstance().apply { timeInMillis = dateTime }
+                                    val timeOfDay = LocalTime.of(
+                                        cal.get(Calendar.HOUR_OF_DAY),
+                                        cal.get(Calendar.MINUTE)
+                                    ).toNanoOfDay() / 1_000_000
+
+                                    val daysOfWeekString = selectedDays.sorted().joinToString(",")
+
+                                    if (existingRecurring != null) {
+                                        viewModel.updateRecurringAppointment(
+                                            existingRecurring.copy(
+                                                title = title.trim(),
+                                                timeOfDay = timeOfDay,
+                                                daysOfWeek = daysOfWeekString,
+                                                location = null,  // Legacy field - now using locationId
+                                                doctorId = selectedDoctorId,
+                                                locationId = selectedLocationId,
+                                                notes = notes.trim().takeIf { it.isNotEmpty() },
+                                                reminderEnabled = reminderEnabled,
+                                                reminderMinutesBefore = reminderMin,
+                                                icon = selectedIcon
+                                            )
+                                        )
+                                    } else {
+                                        viewModel.addRecurringAppointment(
+                                            RecurringAppointment(
+                                                profileId = profileId,
+                                                title = title.trim(),
+                                                timeOfDay = timeOfDay,
+                                                daysOfWeek = daysOfWeekString,
+                                                location = null,  // Legacy field - now using locationId
+                                                doctorId = selectedDoctorId,
+                                                locationId = selectedLocationId,
+                                                notes = notes.trim().takeIf { it.isNotEmpty() },
+                                                reminderEnabled = reminderEnabled,
+                                                reminderMinutesBefore = reminderMin,
+                                                icon = selectedIcon
+                                            )
+                                        )
+                                    }
+                                    onNavigateBack()
+                                }
                             } else {
-                                viewModel.addAppointment(
-                                    Appointment(
-                                        profileId = profileId,
-                                        title = title.trim(),
-                                        dateTime = dateTime,
-                                        location = location.trim().takeIf { it.isNotEmpty() },
-                                        doctorId = selectedDoctorId,
-                                        locationId = selectedLocationId,
-                                        notes = notes.trim().takeIf { it.isNotEmpty() },
-                                        reminderEnabled = reminderEnabled,
-                                        reminderMinutesBefore = reminderMin
+                                // Save as one-time appointment
+                                if (existingAppointment != null) {
+                                    viewModel.updateAppointment(
+                                        existingAppointment.copy(
+                                            title = title.trim(),
+                                            dateTime = dateTime,
+                                            location = null,  // Legacy field - now using locationId
+                                            doctorId = selectedDoctorId,
+                                            locationId = selectedLocationId,
+                                            notes = notes.trim().takeIf { it.isNotEmpty() },
+                                            reminderEnabled = reminderEnabled,
+                                            reminderMinutesBefore = reminderMin,
+                                            icon = selectedIcon
+                                        )
                                     )
-                                )
+                                } else {
+                                    viewModel.addAppointment(
+                                        Appointment(
+                                            profileId = profileId,
+                                            title = title.trim(),
+                                            dateTime = dateTime,
+                                            location = null,  // Legacy field - now using locationId
+                                            doctorId = selectedDoctorId,
+                                            locationId = selectedLocationId,
+                                            notes = notes.trim().takeIf { it.isNotEmpty() },
+                                            reminderEnabled = reminderEnabled,
+                                            reminderMinutesBefore = reminderMin,
+                                            icon = selectedIcon
+                                        )
+                                    )
+                                }
+                                onNavigateBack()
                             }
-                            onNavigateBack()
                         }
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = title.isNotBlank()
+                enabled = title.isNotBlank() && (!isRecurring || selectedDays.isNotEmpty())
             ) {
                 Text("Save")
             }
@@ -529,15 +692,19 @@ fun AddEditAppointmentScreen(
                                     phone = newLocationPhone.trim().takeIf { it.isNotEmpty() }
                                 )
 
-                                viewModel.addLocation(newLocation)
+                                // Insert location and get the new ID
+                                val newLocationId = viewModel.repository.insertLocation(newLocation)
 
                                 // Link to selected doctor if one is selected
                                 if (selectedDoctorId != null) {
-                                    // Wait a bit for location to be inserted
-                                    kotlinx.coroutines.delay(100)
-                                    // Link doctor to location (we'll get the new location ID from the locations list)
-                                    // Note: This is a simplified approach. In production, you'd want to get the actual inserted ID
+                                    viewModel.linkDoctorToLocation(selectedDoctorId!!, newLocationId)
                                 }
+
+                                // Wait a moment for the location to appear in the StateFlow
+                                kotlinx.coroutines.delay(200)
+
+                                // Auto-select the newly created location
+                                selectedLocationId = newLocationId
 
                                 // Reset dialog state
                                 newLocationName = ""
@@ -560,6 +727,75 @@ fun AddEditAppointmentScreen(
                     newLocationPhone = ""
                     showLocationDialog = false
                 }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Icon picker dialog
+    if (showIconPicker) {
+        val icons = listOf(
+            "🏥" to "Doctor",
+            "🦷" to "Dentist",
+            "👁️" to "Eye Doctor",
+            "💉" to "Lab/Blood",
+            "💊" to "Pharmacy",
+            "🧠" to "Therapy",
+            "🩺" to "Checkup",
+            "💇‍♀️" to "Hair",
+            "💅" to "Nails",
+            "💆‍♀️" to "Spa",
+            "🎉" to "Bingo",
+            "📞" to "Call",
+            "🍽️" to "Meal",
+            "🎨" to "Activity",
+            "🏃‍♀️" to "Exercise",
+            "📋" to "General",
+            "⭐" to "Important",
+            "🏠" to "Home Visit"
+        )
+
+        AlertDialog(
+            onDismissRequest = { showIconPicker = false },
+            title = { Text("Choose Icon") },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    icons.chunked(4).forEach { row ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            row.forEach { (icon, label) ->
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier
+                                        .clickable {
+                                            selectedIcon = icon
+                                            showIconPicker = false
+                                        }
+                                        .padding(8.dp)
+                                ) {
+                                    Text(
+                                        text = icon,
+                                        style = MaterialTheme.typography.displaySmall
+                                    )
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showIconPicker = false }) {
                     Text("Cancel")
                 }
             }
