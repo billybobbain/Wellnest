@@ -79,6 +79,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
 
     // Room
     implementation("androidx.room:room-runtime:2.6.1")
@@ -108,6 +109,12 @@ dependencies {
 
     // JSON parsing
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
+    // PDF generation
+    implementation("androidx.print:print:1.0.0")
+
+    // Drag-and-drop reorderable list
+    implementation("sh.calvin.reorderable:reorderable:2.3.3")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
