@@ -4,10 +4,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -18,10 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.billybobbain.wellnest.WellnestViewModel
 import com.billybobbain.wellnest.data.Supply
-import java.text.SimpleDateFormat
-import java.util.*
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun SuppliesScreen(
     viewModel: WellnestViewModel,
@@ -30,6 +32,14 @@ fun SuppliesScreen(
     onEditSupply: (Long) -> Unit
 ) {
     val supplies by viewModel.supplies.collectAsState()
+    val lazyListState = rememberLazyListState()
+
+    val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        val reordered = supplies.toMutableList()
+        val item = reordered.removeAt(from.index)
+        reordered.add(to.index, item)
+        viewModel.reorderSupplies(reordered)
+    }
 
     Scaffold(
         topBar = {
@@ -59,23 +69,28 @@ fun SuppliesScreen(
             }
         } else {
             LazyColumn(
+                state = lazyListState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(supplies) { supply ->
-                    SupplyCard(
-                        supply = supply,
-                        onClick = { onEditSupply(supply.id) },
-                        onMarkReplenished = {
-                            viewModel.updateSupply(
-                                supply.copy(lastReplenished = System.currentTimeMillis())
-                            )
-                        },
-                        onDelete = { viewModel.deleteSupply(supply) }
-                    )
+                items(supplies, key = { it.id }) { supply ->
+                    ReorderableItem(reorderableState, key = supply.id) { isDragging ->
+                        SupplyCard(
+                            supply = supply,
+                            isDragging = isDragging,
+                            onClick = { onEditSupply(supply.id) },
+                            onMarkReplenished = {
+                                viewModel.updateSupply(
+                                    supply.copy(lastReplenished = System.currentTimeMillis())
+                                )
+                            },
+                            onDelete = { viewModel.deleteSupply(supply) },
+                            dragModifier = Modifier.longPressDraggableHandle()
+                        )
+                    }
                 }
             }
         }
@@ -86,14 +101,23 @@ fun SuppliesScreen(
 @Composable
 fun SupplyCard(
     supply: Supply,
+    isDragging: Boolean = false,
     onClick: () -> Unit,
     onMarkReplenished: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    dragModifier: Modifier = Modifier
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDragging) MaterialTheme.colorScheme.tertiaryContainer
+                            else MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isDragging) 8.dp else 1.dp
+        )
     ) {
         Row(
             modifier = Modifier
@@ -102,13 +126,20 @@ fun SupplyCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Drag handle
+            Icon(
+                imageVector = Icons.Default.Menu,
+                contentDescription = "Drag to reorder",
+                modifier = dragModifier.padding(end = 12.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = supply.itemName,
                     style = MaterialTheme.typography.titleMedium
                 )
 
-                // Show last replenished date
                 if (supply.lastReplenished != null) {
                     val daysAgo = ((System.currentTimeMillis() - supply.lastReplenished) / (1000 * 60 * 60 * 24)).toInt()
                     val timeText = when {
@@ -141,17 +172,15 @@ fun SupplyCard(
                 }
             }
 
-            Row {
-                IconButton(onClick = onMarkReplenished) {
-                    Icon(
-                        Icons.Default.Refresh,
-                        contentDescription = "Mark as Replenished",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete")
-                }
+            IconButton(onClick = onMarkReplenished) {
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = "Mark as Replenished",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete")
             }
         }
     }

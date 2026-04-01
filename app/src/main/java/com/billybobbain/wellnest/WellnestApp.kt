@@ -66,6 +66,7 @@ fun WellnestApp(viewModel: WellnestViewModel) {
                 viewModel = viewModel,
                 onNavigateToMedications = { navController.navigate(Screen.Medications.route) },
                 onNavigateToAppointments = { navController.navigate(Screen.Appointments.route) },
+                onNavigateToCalendar = { navController.navigate(Screen.Calendar.route) },
                 onNavigateToLocations = { navController.navigate(Screen.Locations.route) },
                 onNavigateToContacts = { navController.navigate(Screen.Contacts.route) },
                 onNavigateToHealthProfile = { navController.navigate(Screen.HealthProfile.route) },
@@ -299,6 +300,14 @@ fun WellnestApp(viewModel: WellnestViewModel) {
                 viewModel = viewModel,
                 doctorId = doctorId,
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Calendar.route) {
+            CalendarScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onEditAppointment = { id -> navController.navigate(Screen.AddEditAppointment.createRoute(id)) }
             )
         }
 

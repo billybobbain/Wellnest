@@ -23,5 +23,6 @@ data class Supply(
     val profileId: Long,
     val itemName: String,
     val lastReplenished: Long? = null,
-    val notes: String? = null
+    val notes: String? = null,
+    val sortOrder: Int = 0  // For manual ordering - lower numbers appear first
 )

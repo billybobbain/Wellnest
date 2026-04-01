@@ -43,5 +43,6 @@ data class Appointment(
     val reminderMinutesBefore: Int = 60,
     val isArchived: Boolean = false,  // New: soft delete
     val milesDriven: Double? = null,  // New: actual miles driven (for mileage tracking)
-    val wasAttended: Boolean = true   // New: did you actually attend? (defaults to true)
+    val wasAttended: Boolean = true,   // New: did you actually attend? (defaults to true)
+    val icon: String? = null  // New: emoji icon for visual identification
 )

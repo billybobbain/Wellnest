@@ -116,8 +116,8 @@ interface WellnestDao {
     suspend fun deleteSecurityCode(securityCode: SecurityCode)
 
     // Supply operations
-    // Sort by last replenished (oldest first, never replenished at top), then by name
-    @Query("SELECT * FROM supplies WHERE profileId = :profileId ORDER BY lastReplenished ASC, itemName ASC")
+    // Sort by manual order (sortOrder), then by name
+    @Query("SELECT * FROM supplies WHERE profileId = :profileId ORDER BY sortOrder ASC, itemName ASC")
     fun getSuppliesForProfile(profileId: Long): Flow<List<Supply>>
 
     @Insert
@@ -202,4 +202,20 @@ interface WellnestDao {
 
     @Query("SELECT d.* FROM doctors d INNER JOIN doctor_locations dl ON d.id = dl.doctorId WHERE dl.locationId = :locationId ORDER BY d.name ASC")
     fun getDoctorsForLocation(locationId: Long): Flow<List<Doctor>>
+
+    // Recurring appointment operations
+    @Query("SELECT * FROM recurring_appointments WHERE profileId = :profileId AND isActive = 1 ORDER BY title ASC")
+    fun getRecurringAppointmentsForProfile(profileId: Long): Flow<List<RecurringAppointment>>
+
+    @Query("SELECT * FROM recurring_appointments WHERE id = :id")
+    suspend fun getRecurringAppointment(id: Long): RecurringAppointment?
+
+    @Insert
+    suspend fun insertRecurringAppointment(recurringAppointment: RecurringAppointment): Long
+
+    @Update
+    suspend fun updateRecurringAppointment(recurringAppointment: RecurringAppointment)
+
+    @Delete
+    suspend fun deleteRecurringAppointment(recurringAppointment: RecurringAppointment)
 }

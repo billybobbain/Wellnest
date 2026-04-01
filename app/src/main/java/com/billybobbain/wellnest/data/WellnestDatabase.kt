@@ -34,9 +34,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         Message::class,
         Doctor::class,
         Location::class,
-        DoctorLocation::class
+        DoctorLocation::class,
+        RecurringAppointment::class
     ],
-    version = 9,
+    version = 12,
     exportSchema = false
 )
 abstract class WellnestDatabase : RoomDatabase() {
@@ -304,6 +305,57 @@ abstract class WellnestDatabase : RoomDatabase() {
             }
         }
 
+        // Migration from version 9 to 10: Add recurring appointments
+        private val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create recurring_appointments table
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS recurring_appointments (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        profileId INTEGER NOT NULL,
+                        title TEXT NOT NULL,
+                        timeOfDay INTEGER NOT NULL,
+                        daysOfWeek TEXT NOT NULL,
+                        doctorId INTEGER,
+                        locationId INTEGER,
+                        location TEXT,
+                        notes TEXT,
+                        reminderEnabled INTEGER NOT NULL,
+                        reminderMinutesBefore INTEGER NOT NULL,
+                        isActive INTEGER NOT NULL,
+                        FOREIGN KEY(profileId) REFERENCES profiles(id) ON DELETE CASCADE,
+                        FOREIGN KEY(doctorId) REFERENCES doctors(id) ON DELETE SET NULL,
+                        FOREIGN KEY(locationId) REFERENCES locations(id) ON DELETE SET NULL
+                    )
+                    """.trimIndent()
+                )
+
+                // Create indices for foreign keys
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_recurring_appointments_profileId ON recurring_appointments(profileId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_recurring_appointments_doctorId ON recurring_appointments(doctorId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_recurring_appointments_locationId ON recurring_appointments(locationId)")
+            }
+        }
+
+        // Migration from version 10 to 11: Add icon fields to appointments
+        private val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add icon column to appointments table
+                database.execSQL("ALTER TABLE appointments ADD COLUMN icon TEXT")
+
+                // Add icon column to recurring_appointments table
+                database.execSQL("ALTER TABLE recurring_appointments ADD COLUMN icon TEXT")
+            }
+        }
+
+        private val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add sortOrder column to supplies table for manual ordering
+                database.execSQL("ALTER TABLE supplies ADD COLUMN sortOrder INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         fun getDatabase(context: Context): WellnestDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -311,7 +363,7 @@ abstract class WellnestDatabase : RoomDatabase() {
                     WellnestDatabase::class.java,
                     "wellnest_database"
                 )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
                     .build()
                 INSTANCE = instance
                 instance

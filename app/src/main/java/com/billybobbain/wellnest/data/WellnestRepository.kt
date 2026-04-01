@@ -104,6 +104,12 @@ class WellnestRepository(private val dao: WellnestDao) {
 
     suspend fun deleteSupply(supply: Supply) = dao.deleteSupply(supply)
 
+    suspend fun reorderSupplies(supplies: List<Supply>) {
+        supplies.forEachIndexed { index, supply ->
+            dao.updateSupply(supply.copy(sortOrder = index))
+        }
+    }
+
     // Settings operations
     val settings: Flow<Settings?> = dao.getSettings()
 
@@ -182,4 +188,20 @@ class WellnestRepository(private val dao: WellnestDao) {
 
     fun getDoctorsForLocation(locationId: Long): Flow<List<Doctor>> =
         dao.getDoctorsForLocation(locationId)
+
+    // Recurring appointment operations
+    fun getRecurringAppointmentsForProfile(profileId: Long): Flow<List<RecurringAppointment>> =
+        dao.getRecurringAppointmentsForProfile(profileId)
+
+    suspend fun getRecurringAppointment(id: Long): RecurringAppointment? =
+        dao.getRecurringAppointment(id)
+
+    suspend fun insertRecurringAppointment(recurringAppointment: RecurringAppointment): Long =
+        dao.insertRecurringAppointment(recurringAppointment)
+
+    suspend fun updateRecurringAppointment(recurringAppointment: RecurringAppointment) =
+        dao.updateRecurringAppointment(recurringAppointment)
+
+    suspend fun deleteRecurringAppointment(recurringAppointment: RecurringAppointment) =
+        dao.deleteRecurringAppointment(recurringAppointment)
 }

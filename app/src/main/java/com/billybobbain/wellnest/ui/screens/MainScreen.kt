@@ -27,6 +27,7 @@ fun MainScreen(
     viewModel: WellnestViewModel,
     onNavigateToMedications: () -> Unit,
     onNavigateToAppointments: () -> Unit,
+    onNavigateToCalendar: () -> Unit,
     onNavigateToLocations: () -> Unit,
     onNavigateToContacts: () -> Unit,
     onNavigateToHealthProfile: () -> Unit,
@@ -102,6 +103,13 @@ fun MainScreen(
                     title = "Appointments",
                     icon = Icons.Default.DateRange,
                     onClick = onNavigateToAppointments
+                )
+            }
+            item {
+                MenuCard(
+                    title = "Calendar",
+                    icon = Icons.Default.CalendarMonth,
+                    onClick = onNavigateToCalendar
                 )
             }
             item {

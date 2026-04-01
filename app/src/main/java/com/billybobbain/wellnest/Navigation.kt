@@ -50,6 +50,7 @@ sealed class Screen(val route: String) {
         fun createRoute(doctorId: Long? = null) =
             "add_edit_doctor/${doctorId ?: "new"}"
     }
+    object Calendar : Screen("calendar")
     object Settings : Screen("settings")
     object AddEditProfile : Screen("add_edit_profile/{profileId}") {
         fun createRoute(profileId: Long? = null) =

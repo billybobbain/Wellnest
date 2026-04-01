@@ -4,9 +4,11 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.billybobbain.wellnest.data.*
+import com.billybobbain.wellnest.utils.RecurringAppointmentExpander
 import com.billybobbain.wellnest.utils.TestDataGenerator
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 class WellnestViewModel(application: Application) : AndroidViewModel(application) {
     internal val repository: WellnestRepository
@@ -23,6 +25,8 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
     val currentProfile: StateFlow<Profile?>
     val medications: StateFlow<List<Medication>>
     val appointments: StateFlow<List<Appointment>>
+    val recurringAppointments: StateFlow<List<RecurringAppointment>>
+    val allAppointmentsForCalendar: StateFlow<List<Appointment>>  // Real + virtual instances
     val contacts: StateFlow<List<Contact>>
     val healthProfile: StateFlow<HealthProfile?>
     val insurancePolicies: StateFlow<List<InsurancePolicy>>
@@ -99,6 +103,39 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
             } else {
                 flowOf(emptyList())
             }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+        recurringAppointments = selectedProfileId.flatMapLatest { profileId ->
+            if (profileId != null) {
+                repository.getRecurringAppointmentsForProfile(profileId)
+            } else {
+                flowOf(emptyList())
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+        // Combine real appointments with virtual instances from recurring appointments
+        allAppointmentsForCalendar = combine(
+            appointments,
+            recurringAppointments
+        ) { realAppts, recurringAppts ->
+            // Expand recurring appointments for a 120-day window (30 days past, 90 days future)
+            val today = LocalDate.now()
+            val virtualAppts = RecurringAppointmentExpander.expandAllRecurring(
+                recurringAppts,
+                today.minusDays(30),
+                today.plusDays(90)
+            )
+
+            // Combine and sort by dateTime
+            (realAppts + virtualAppts).sortedBy { it.dateTime }
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -281,6 +318,32 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    // Recurring appointment operations
+    fun addRecurringAppointment(recurringAppointment: RecurringAppointment) {
+        viewModelScope.launch {
+            repository.insertRecurringAppointment(recurringAppointment)
+            // TODO: Schedule notifications for upcoming instances if reminderEnabled is true
+        }
+    }
+
+    fun updateRecurringAppointment(recurringAppointment: RecurringAppointment) {
+        viewModelScope.launch {
+            repository.updateRecurringAppointment(recurringAppointment)
+            // TODO: Update notifications for all instances
+        }
+    }
+
+    fun deleteRecurringAppointment(recurringAppointment: RecurringAppointment) {
+        viewModelScope.launch {
+            repository.deleteRecurringAppointment(recurringAppointment)
+            // TODO: Cancel all notifications for this recurring series
+        }
+    }
+
+    suspend fun getRecurringAppointment(id: Long): RecurringAppointment? {
+        return repository.getRecurringAppointment(id)
+    }
+
     // Contact operations
     fun addContact(contact: Contact) {
         viewModelScope.launch {
@@ -372,7 +435,13 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
     // Supply operations
     fun addSupply(supply: Supply) {
         viewModelScope.launch {
-            repository.insertSupply(supply)
+            // Get current supplies and increment their sortOrder
+            val currentSupplies = supplies.value
+            currentSupplies.forEach { existingSupply ->
+                repository.updateSupply(existingSupply.copy(sortOrder = existingSupply.sortOrder + 1))
+            }
+            // Insert new supply with sortOrder = 0 (top of list)
+            repository.insertSupply(supply.copy(sortOrder = 0))
         }
     }
 
@@ -385,6 +454,12 @@ class WellnestViewModel(application: Application) : AndroidViewModel(application
     fun deleteSupply(supply: Supply) {
         viewModelScope.launch {
             repository.deleteSupply(supply)
+        }
+    }
+
+    fun reorderSupplies(supplies: List<Supply>) {
+        viewModelScope.launch {
+            repository.reorderSupplies(supplies)
         }
     }
 
